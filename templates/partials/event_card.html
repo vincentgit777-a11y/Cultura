@@ -1,0 +1,58 @@
+{#-
+  TECHNOVANA — reusable event card.
+
+  Usage:
+    {% from 'partials/event_card.html' import event_card %}
+    {{ event_card(event, index=1) }}
+
+  The card contains one real link, so it is fully keyboard accessible. The
+  link is stretched over the whole card with a pseudo-element.
+-#}
+{% from 'components/icons.html' import icon %}
+
+{% macro event_card(event, index=none) -%}
+<article class="event-card">
+  <div class="event-card__top">
+    <span class="category-label">{{ event.category }}</span>
+    {% if index %}<span class="event-card__index">{{ '%02d' | format(index) }}</span>{% endif %}
+  </div>
+
+  <h3 class="event-card__title">
+    <a href="{{ url_for('event_detail', slug=event.slug) }}">{{ event.title }}</a>
+  </h3>
+
+  <p class="event-card__description">{{ event.short_description }}</p>
+
+  <ul class="event-card__meta">
+    {% if event.date %}
+      <li>{{ icon('calendar', 14) }} {{ event.date | pretty_date }}</li>
+    {% else %}
+      <li><span class="tbc">Date to be confirmed</span></li>
+    {% endif %}
+
+    {% if event.venue %}
+      <li>{{ icon('pin', 14) }} {{ event.venue }}</li>
+    {% endif %}
+
+    <li>
+      {{ icon('users', 14) }}
+      {% if event.participation_type == 'individual' %}
+        Individual
+      {% elif event.participation_type == 'team' %}
+        Team of {{ event.min_team_size }}–{{ event.max_team_size }}
+      {% else %}
+        Individual or team of {{ event.min_team_size }}–{{ event.max_team_size }}
+      {% endif %}
+    </li>
+  </ul>
+
+  <div class="event-card__footer">
+    <span class="status-badge status-badge--{{ event.registration_status }}">
+      {{ 'Open for registration' if event.registration_status == 'open' else 'Registration closed' }}
+    </span>
+    <span class="link-arrow" aria-hidden="true">
+      View {{ icon('arrow-right', 15, 'link-arrow__arrow') }}
+    </span>
+  </div>
+</article>
+{%- endmacro %}

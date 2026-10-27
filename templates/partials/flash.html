@@ -1,0 +1,19 @@
+{#-
+  TECHNOVANA — flash messages.
+  Messages are pushed from the Flask routes with flash("…", "error") and are
+  rendered here with the appropriate ARIA role.
+-#}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="container flash-stack" role="region" aria-label="Notifications">
+      {% for category, message in messages %}
+        {% set kind = category if category in ['error', 'success', 'info'] else 'info' %}
+        <div class="flash flash--{{ kind }}"
+             {% if kind == 'error' %}role="alert"{% else %}role="status"{% endif %}>
+          <p>{{ message }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}

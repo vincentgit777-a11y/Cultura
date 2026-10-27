@@ -1,0 +1,88 @@
+{#-
+  TECHNOVANA — site footer.
+  Only facts supplied in data/settings.json are shown. Fields that are still
+  empty render an explicit "to be confirmed" note instead of invented detail.
+-#}
+{% from 'components/icons.html' import icon %}
+{% from 'components/artwork.html' import wordmark %}
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="site-footer__grid">
+
+      <div>
+        <span class="site-footer__title">{{ site_name }}</span>
+        <p class="site-footer__descriptor">{{ site.descriptor | default('Student technology festival') }}</p>
+        <p class="site-footer__text">
+          {% if site.about_body %}
+            {{ site.about_body }}
+          {% else %}
+            A student technology festival for people who would rather build the answer
+            than watch for it.
+          {% endif %}
+        </p>
+      </div>
+
+      <div>
+        <h2 class="site-footer__heading">Explore</h2>
+        <ul class="site-footer__list">
+          <li><a href="{{ url_for('index') }}">Home</a></li>
+          <li><a href="{{ url_for('events') }}">All events</a></li>
+          <li><a href="{{ url_for('schedule') }}">Schedule</a></li>
+          <li><a href="{{ url_for('about') }}">About</a></li>
+          <li><a href="{{ url_for('faq') }}">FAQ</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h2 class="site-footer__heading">Event details</h2>
+        <ul class="site-footer__list">
+          {% for category in categories[:5] %}
+            <li>
+              <a href="{{ url_for('events', category=category) }}">{{ category }}</a>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <div>
+        <h2 class="site-footer__heading">Venue &amp; contact</h2>
+        <ul class="site-footer__list">
+          <li>
+            {% if site.venue %}
+              {{ site.venue }}{% if site.city %}, {{ site.city }}{% endif %}
+            {% else %}
+              <span class="tbc" style="color:#F8F4EA;border-color:rgba(248,244,234,.3)">Venue to be confirmed</span>
+            {% endif %}
+          </li>
+          <li>
+            {% if site.event_date %}
+              {{ site.event_date | pretty_date }}
+            {% else %}
+              <span class="tbc" style="color:#F8F4EA;border-color:rgba(248,244,234,.3)">Dates to be confirmed</span>
+            {% endif %}
+          </li>
+          <li>
+            {% if site.contact_email %}
+              <a href="mailto:{{ site.contact_email }}">{{ site.contact_email }}</a>
+            {% else %}
+              <span class="tbc" style="color:#F8F4EA;border-color:rgba(248,244,234,.3)">Contact to be confirmed</span>
+            {% endif %}
+          </li>
+          {% if site.social.instagram or site.social.github or site.social.linkedin %}
+            <li>
+              {% if site.social.instagram %}<a href="{{ site.social.instagram }}" rel="noopener">Instagram</a>{% endif %}
+              {% if site.social.github %}<a href="{{ site.social.github }}" rel="noopener">GitHub</a>{% endif %}
+              {% if site.social.linkedin %}<a href="{{ site.social.linkedin }}" rel="noopener">LinkedIn</a>{% endif %}
+            </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="site-footer__bottom">
+      <p>&copy; {{ current_year }} {{ site_name }}. A student technology festival project.</p>
+      <p>{{ site.privacy_note }}</p>
+    </div>
+  </div>
+</footer>

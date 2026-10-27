@@ -1,0 +1,189 @@
+/* ==========================================================================
+   TECHNOVANA — responsive.css
+   Breakpoints
+     1600px  wide desktop
+     1280px  desktop
+     1024px  laptop
+      900px  tablet landscape
+      768px  tablet portrait
+      640px  large phone
+      480px  phone
+      360px  small phone
+   ========================================================================== */
+
+/* ==========================================================================
+   <= 1280px
+   ========================================================================== */
+
+@media (max-width: 1280px) {
+  :root {
+    --fs-hero: clamp(2.75rem, 1.4rem + 5.4vw, 6rem);
+  }
+}
+
+/* ==========================================================================
+   <= 1024px
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  :root {
+    --header-height: 66px;
+    --section-gap: clamp(3rem, 2rem + 4vw, 4.5rem);
+  }
+
+  .hero__title { max-width: 14ch; }
+}
+
+/* ==========================================================================
+   <= 900px — tablet
+   ========================================================================== */
+
+@media (max-width: 900px) {
+  .page-head__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .page-head__aside {
+    max-width: 420px;
+  }
+
+  .featured__item--lead {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .featured {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ==========================================================================
+   <= 768px — small tablet / large phone
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  :root {
+    --gutter: 1.25rem;
+  }
+
+  .section { padding-block: clamp(2.5rem, 2rem + 3vw, 3.5rem); }
+
+  .event-body__section { margin-bottom: var(--sp-7); }
+
+  .register-layout {
+    padding-block: var(--sp-7);
+  }
+
+  .register-layout__aside { order: 0; }
+}
+
+/* ==========================================================================
+   <= 640px — phone
+   ========================================================================== */
+
+@media (max-width: 640px) {
+  :root {
+    --fs-hero: clamp(2.5rem, 1.6rem + 5.4vw, 3.5rem);
+    --fs-h1: clamp(1.9rem, 1.4rem + 2.6vw, 2.6rem);
+    --fs-h2: clamp(1.55rem, 1.25rem + 1.8vw, 2.1rem);
+  }
+
+  /* The wordmark descriptor and the header CTA are dropped on small
+     screens so the header never overflows. The mobile menu carries the
+     same links. */
+  .wordmark__descriptor { display: none; }
+
+  .site-header__actions > .btn { display: none; }
+
+  .featured,
+  .grid--events,
+  .grid--two {
+    grid-template-columns: 1fr;
+  }
+
+  .hero__actions .btn,
+  .final-cta__actions .btn {
+    width: 100%;
+  }
+
+  .hero__facts { gap: var(--sp-4); }
+
+  .filter-bar {
+    padding: var(--sp-4);
+  }
+
+  .event-card { padding: var(--sp-4); }
+
+  .schedule-entry {
+    padding: var(--sp-4) 0;
+  }
+
+  .success__reference {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--sp-2);
+  }
+
+  .form-actions .btn { width: 100%; }
+
+  .stat-strip { gap: var(--sp-4); }
+}
+
+/* ==========================================================================
+   <= 480px
+   ========================================================================== */
+
+@media (max-width: 480px) {
+  :root {
+    --gutter: 1rem;
+  }
+
+  .btn {
+    padding: 0.65rem 1rem;
+    font-size: var(--fs-meta);
+  }
+
+  .page-head__aside { max-width: none; }
+
+  .event-hero__art { padding: var(--sp-4); }
+
+  .faq-item__trigger { font-size: 1.05rem; }
+
+  .numbered-list__item { grid-template-columns: 32px minmax(0, 1fr); }
+}
+
+/* ==========================================================================
+   <= 360px
+   ========================================================================== */
+
+@media (max-width: 360px) {
+  .hero__title { font-size: 2.25rem; }
+}
+
+/* ==========================================================================
+   Landscape phones — keep the header compact
+   ========================================================================== */
+
+@media (max-height: 480px) and (orientation: landscape) {
+  .hero {
+    padding-block: var(--sp-6);
+  }
+
+  .hero__art { display: none; }
+}
+
+/* ==========================================================================
+   Coarse pointers — larger hit areas
+   ========================================================================== */
+
+@media (pointer: coarse) {
+  .btn,
+  .chip,
+  .nav-toggle,
+  .faq-item__trigger,
+  .event-card__title a::after {
+    min-height: 44px;
+  }
+
+  .event-card__title a::after { min-height: 0; }
+}

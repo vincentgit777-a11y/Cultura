@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% from 'components/icons.html' import icon %}
+
+{% block title %}Login · {{ site_name }}{% endblock %}
+{% block meta_description %}Sign in to your Cultura account to manage registrations, teams, and your schedule.{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+    <div class="auth-card">
+      <div class="auth-card__header">
+        <h1 class="auth-card__title">Welcome back</h1>
+        <p class="auth-card__subtitle">Sign in to access your dashboard</p>
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-list">
+            {% for category, message in messages %}
+              <div class="flash flash--{{ category }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <form method="post" class="auth-form" novalidate>
+        <input type="hidden" name="next" value="{{ next_url }}">
+        <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
+
+        <div class="form-group">
+          <label for="email" class="form-label">Email</label>
+          <input type="email"
+                 id="email"
+                 name="email"
+                 class="form-input"
+                 value="{{ email or '' }}"
+                 placeholder="you@example.edu"
+                 autocomplete="email"
+                 required>
+        </div>
+
+        <div class="form-group">
+          <label for="password" class="form-label">Password</label>
+          <input type="password"
+                 id="password"
+                 name="password"
+                 class="form-input"
+                 placeholder="Enter your password"
+                 autocomplete="current-password"
+                 required>
+        </div>
+
+        <div class="form-group form-group--inline">
+          <label class="checkbox-label">
+            <input type="checkbox" name="remember" id="remember">
+            <span class="checkbox-custom"></span>
+            <span class="checkbox-text">Remember me</span>
+          </label>
+          <span class="link-forgot link-forgot--disabled">Forgot password? (coming soon)</span>
+        </div>
+
+        <button type="submit" class="btn btn--primary btn--block">
+          Sign in {{ icon('arrow-right', 18, 'btn__arrow') }}
+        </button>
+      </form>
+
+      <p class="auth-card__footer">
+        Don't have an account? <a href="{{ url_for('register_account') }}">Create one</a>
+      </p>
+
+      <p class="auth-card__footer auth-card__footer--admin">
+        <a href="{{ url_for('admin_login') }}">Admin login</a>
+      </p>
+    </div>
+  </div>
+</section>
+{% endblock %}

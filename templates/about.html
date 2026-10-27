@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% from 'components/icons.html' import icon %}
+
+{% block title %}About · {{ site_name }}{% endblock %}
+{% block meta_description %}{{ site.about_body }}{% endblock %}
+
+{% block content %}
+
+<section class="page-head page-head--navy">
+  <div class="container page-head__grid">
+    <div>
+      <span class="page-head__eyebrow">About</span>
+      <h1 class="page-head__title">{{ site.about_title | default('A student technology festival.') }}</h1>
+    </div>
+    <div class="page-head__aside">
+      <span class="u-mono u-muted">Everything below is filled in from</span>
+      <code>data/settings.json</code>
+      <span class="u-mono u-muted">Edit it and this page updates.</span>
+    </div>
+  </div>
+</section>
+
+<section class="about-intro">
+  <div class="container" style="display: contents;">
+    <div>
+      <p class="about-intro__lead">{{ site.about_body }}</p>
+    </div>
+
+    <div class="about-body">
+      <p>
+        Every competition in the programme is described in one place, with the rules,
+        the team requirements and the registration status published alongside it.
+        Nothing on this site is a placeholder page: if a detail has not been
+        confirmed by the organisers, it is marked as such rather than invented.
+      </p>
+      <p>
+        If you are a student looking for a competition to enter, start with the
+        programme. If you are an organiser looking for the current state of the
+        festival, the schedule and the event pages show exactly what has been
+        confirmed so far.
+      </p>
+      <p>
+        <a class="link-arrow" href="{{ url_for('events') }}">
+          See all {{ event_count }} competitions {{ icon('arrow-right', 16, 'link-arrow__arrow') }}
+        </a>
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="section section--flush-top">
+  <div class="container">
+    <div class="stat-strip">
+      <div class="stat">
+        <span class="stat__value">{{ event_count }}</span>
+        <span class="stat__label">Competitions</span>
+      </div>
+      <div class="stat">
+        <span class="stat__value">{{ categories|length }}</span>
+        <span class="stat__label">Categories</span>
+      </div>
+      <div class="stat">
+        <span class="stat__value">{{ all_events|selectattr('registration_status', 'equalto', 'open')|list|length }}</span>
+        <span class="stat__label">Open for registration</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% if principles %}
+<section class="section section--ruled">
+  <div class="container">
+    <div class="section-head">
+      <span class="section-head__eyebrow u-mono">How it works</span>
+      <h2 class="section-head__title">Three principles</h2>
+    </div>
+
+    <div class="grid grid--principles">
+      {% for principle in principles %}
+        <article class="principle" style="border-top: 2px solid var(--navy);">
+          <span class="principle__number">0{{ loop.index }}</span>
+          <h3 class="principle__title">{{ principle.title }}</h3>
+          <p class="principle__text">{{ principle.text }}</p>
+        </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<section class="section section--cobalt">
+  <div class="container final-cta">
+    <div>
+      <h2 class="final-cta__title" style="color: var(--ivory)">Ready to take part?</h2>
+      <p class="final-cta__text" style="color: rgba(248,244,234,.82)">
+        Pick a competition, read the rules, and register. It takes a couple of minutes.
+      </p>
+    </div>
+    <div class="final-cta__actions">
+      <a class="btn btn--lime" href="{{ url_for('events') }}">
+        Explore events {{ icon('arrow-right', 18, 'btn__arrow') }}
+      </a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

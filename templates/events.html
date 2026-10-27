@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% from 'components/icons.html' import icon %}
+{% from 'partials/event_card.html' import event_card %}
+
+{% block title %}Events · {{ site_name }}{% endblock %}
+{% block meta_description %}Every competition in the {{ site_name }} programme. Search and filter by category to find the one that fits.{% endblock %}
+
+{% block content %}
+
+<section class="page-head">
+  <div class="container page-head__grid">
+    <div>
+      <span class="page-head__eyebrow">Programme</span>
+      <h1 class="page-head__title">Every competition in one place</h1>
+      <p class="page-head__lead">
+        Software, design, AI, gaming, strategy and the rest of the festival line-up.
+        Filter by category, or search for a competition by name.
+      </p>
+    </div>
+
+    <div class="page-head__aside">
+      <span class="page-head__count">{{ total_events }}</span>
+      <span class="u-mono u-muted">competitions in the programme</span>
+      <a class="btn btn--sm" href="{{ url_for('schedule') }}">See the schedule</a>
+    </div>
+  </div>
+</section>
+
+<section class="directory">
+  <div class="container">
+
+    {# ------------------------------------------------------------------
+        FILTER BAR
+        ------------------------------------------------------------------ #}
+    <form class="filter-bar" id="event-filters" method="get" action="{{ url_for('events') }}" role="search">
+      <div class="filter-bar__group">
+        <label class="filter-bar__label" for="event-search">Search the programme</label>
+        <div class="search-field">
+          <span class="search-field__icon" aria-hidden="true">{{ icon('search', 18) }}</span>
+          <input type="search" id="event-search" name="q" value="{{ query }}"
+                 placeholder="Try “debugging”, “design” or “gaming”"
+                 autocomplete="off" aria-describedby="filter-status">
+        </div>
+      </div>
+
+      <div class="filter-bar__group">
+        <label class="filter-bar__label" for="event-sort">Sort by</label>
+        <select class="select" id="event-sort" name="sort">
+          <option value="title" {% if selected_sort == 'title' %}selected{% endif %}>Title (A–Z)</option>
+          <option value="category" {% if selected_sort == 'category' %}selected{% endif %}>Category</option>
+          <option value="date" {% if selected_sort == 'date' %}selected{% endif %}>Date</option>
+          <option value="status" {% if selected_sort == 'status' %}selected{% endif %}>Open for registration</option>
+        </select>
+      </div>
+
+      <div class="filter-bar__group filter-bar__chips">
+        <span class="filter-bar__label" id="category-label">Filter by category</span>
+        <ul class="chip-row" aria-labelledby="category-label">
+          <li>
+            <button type="button" class="chip" data-category="all"
+                    aria-pressed="{{ 'true' if selected_category == 'all' else 'false' }}">
+              All <span class="chip__count">{{ total_events }}</span>
+            </button>
+          </li>
+          {% for category in categories %}
+            <li>
+              <button type="button" class="chip" data-category="{{ category }}"
+                      aria-pressed="{{ 'true' if selected_category == category else 'false' }}">
+                {{ category }}
+              </button>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <p class="filter-bar__status" id="filter-status" role="status" aria-live="polite">
+        Showing <strong>{{ events|length }}</strong> of {{ total_events }} competitions
+        {%- if query %} matching “{{ query }}”{% endif %}
+        {%- if selected_category != 'all' %} in {{ selected_category }}{% endif %}.
+      </p>
+
+      <noscript>
+        <p class="form-note">
+          JavaScript is off, so the filters are applied when you press the button below.
+        </p>
+        <button class="btn btn--sm" type="submit">Apply filters</button>
+      </noscript>
+    </form>
+
+    {# ------------------------------------------------------------------
+        RESULTS
+        ------------------------------------------------------------------ #}
+    <h2 class="u-visually-hidden">Competition results</h2>
+
+    {% if events %}
+      <div class="grid grid--events" id="event-results">
+        {% for event in events %}
+          <div class="event-result" data-title="{{ event.title | lower }}"
+               data-category="{{ event.category | lower }}"
+               data-description="{{ (event.short_description ~ ' ' ~ event.description) | lower }}"
+               data-status="{{ event.registration_status }}">
+            {{ event_card(event) }}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state" id="event-empty">
+        <span class="empty-state__mark">{{ icon('search', 28) }}</span>
+        <h2 class="empty-state__title">No competitions matched</h2>
+        <p class="empty-state__text">
+          Nothing in the programme matches that search. Try a different word, or clear
+          the filters to see all {{ total_events }} competitions.
+        </p>
+        <div class="empty-state__actions">
+          <a class="btn" href="{{ url_for('events') }}">Clear all filters</a>
+        </div>
+      </div>
+    {% endif %}
+
+  </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/events.js') }}" defer></script>
+{% endblock %}

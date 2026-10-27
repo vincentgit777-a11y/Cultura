@@ -1,0 +1,276 @@
+{% extends 'base.html' %}
+{% from 'components/icons.html' import icon %}
+{% from 'components/artwork.html' import hero_art %}
+{% from 'partials/event_card.html' import event_card %}
+
+{% block title %}{{ site_name }} — {{ site.tagline | default('Where culture comes alive.') }}{% endblock %}
+{% block meta_description %}{{ site.hero_description }}{% endblock %}
+
+{% block content %}
+
+{# ==========================================================================
+   HERO
+   ========================================================================== #}
+<section class="hero">
+  <div class="container hero__grid">
+
+    <div class="hero__copy">
+      <p class="hero__eyebrow">{{ site.descriptor | default('College Cultural Festival') }}</p>
+
+      <h1 class="hero__title">{{ site.hero_headline | default('WHERE CULTURE COMES ALIVE.') }}</h1>
+
+      <p class="hero__lead">{{ site.hero_description }}</p>
+
+      <div class="hero__actions">
+        <a class="btn btn--primary" href="{{ url_for('events') }}">
+          Explore Events {{ icon('arrow-right', 18, 'btn__arrow') }}
+        </a>
+        <a class="btn btn--secondary" href="{{ url_for('events') }}">
+          View All Events {{ icon('calendar', 18, 'btn__arrow') }}
+        </a>
+      </div>
+
+      <dl class="hero__facts">
+        <div class="hero__fact">
+          <dt>Events</dt>
+          <dd>{{ event_count }}</dd>
+        </div>
+        <div class="hero__fact">
+          <dt>Categories</dt>
+          <dd>{{ categories|length }}</dd>
+        </div>
+        <div class="hero__fact">
+          <dt>Date</dt>
+          <dd>
+            {% if site.event_date %}
+              {{ site.event_date | pretty_date }}
+            {% else %}
+              <span class="tbc">To be confirmed</span>
+            {% endif %}
+          </dd>
+        </div>
+        <div class="hero__fact">
+          <dt>Venue</dt>
+          <dd>
+            {% if site.venue %}
+              {{ site.venue }}
+            {% else %}
+              <span class="tbc">To be confirmed</span>
+            {% endif %}
+          </dd>
+        </div>
+      </dl>
+    </div>
+
+    <div class="hero__art">
+      {{ hero_art() }}
+      <span class="hero__art-tag">
+        {{ icon('sparkle', 14) }} {{ event_count }} events & competitions
+      </span>
+    </div>
+
+  </div>
+</section>
+
+{# ==========================================================================
+   FEATURED EVENTS
+   ========================================================================== #}
+{% if featured_events %}
+<section class="section">
+  <div class="container">
+
+    <div class="section-head section-head--split">
+      <div>
+        <span class="section-head__eyebrow u-mono">Featured Events</span>
+        <h2 class="section-head__title">Start with these</h2>
+      </div>
+      <p class="section-head__lead">
+        A short selection from the full programme. Every event has its own
+        page with the details, schedule and registration form.
+      </p>
+    </div>
+
+    <div class="featured">
+      {% for event in featured_events %}
+        <div class="featured__item {% if loop.first %}featured__item--lead{% endif %}">
+          {{ event_card(event, index=loop.index) }}
+        </div>
+      {% endfor %}
+    </div>
+
+    <p style="margin-top: var(--sp-6)">
+      <a class="link-arrow" href="{{ url_for('events') }}">
+        See all {{ event_count }} events {{ icon('arrow-right', 16, 'link-arrow__arrow') }}
+      </a>
+    </p>
+
+  </div>
+</section>
+{% endif %}
+
+{# ==========================================================================
+   CATEGORIES PREVIEW
+   ========================================================================== #}
+{% set category_list = categories %}
+{% if category_list %}
+<section class="section section--ruled">
+  <div class="container">
+
+    <div class="section-head section-head--split">
+      <div>
+        <span class="section-head__eyebrow u-mono">Categories</span>
+        <h2 class="section-head__title">Browse by interest</h2>
+      </div>
+      <p class="section-head__lead">
+        Filter events and competitions by category to find what excites you.
+      </p>
+    </div>
+
+    <ul class="category-grid">
+      {% for category in category_list[:6] %}
+        <li>
+          <a class="category-card" href="{{ url_for('events', category=category) }}">
+            <span class="category-card__icon">{{ icon('tag', 24) }}</span>
+            <span class="category-card__name">{{ category }}</span>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+
+    {% if category_list|length > 6 %}
+    <p style="margin-top: var(--sp-6); text-align: center;">
+      <a class="link-arrow" href="{{ url_for('events') }}">
+        View all categories {{ icon('arrow-right', 16, 'link-arrow__arrow') }}
+      </a>
+    </p>
+    {% endif %}
+
+  </div>
+</section>
+{% endif %}
+
+{# ==========================================================================
+   SCHEDULE PREVIEW
+   ========================================================================== #}
+<section class="section">
+  <div class="container">
+    <div class="section-head section-head--split">
+      <div>
+        <span class="section-head__eyebrow u-mono">Schedule</span>
+        <h2 class="section-head__title">The running order</h2>
+      </div>
+      <p class="section-head__lead">
+        {% if has_schedule %}
+          Confirmed sessions appear here as soon as they are published. Filter by
+          day on the full schedule page.
+        {% else %}
+          The festival timetable has not been published yet. It appears here the
+          moment the sessions are confirmed.
+        {% endif %}
+      </p>
+    </div>
+
+    {% if has_schedule %}
+      <div class="schedule-day">
+        {% for session in schedule_sessions %}
+          <div class="schedule-entry">
+            <p class="schedule-entry__time">
+              {{ session.start_time | pretty_time }}
+              {% if session.end_time %}<span> → {{ session.end_time | pretty_time }}</span>{% endif %}
+            </p>
+            <div>
+              <h3 class="schedule-entry__title">
+                <a href="{{ url_for('event_detail', slug=session.slug) }}">{{ session.title }}</a>
+              </h3>
+              <p class="schedule-entry__meta">
+                {{ session.date | pretty_date }}{% if session.venue %} · {{ session.venue }}{% endif %}
+              </p>
+            </div>
+            <a class="link-arrow schedule-entry__link"
+               href="{{ url_for('event_detail', slug=session.slug) }}">
+              Event details {{ icon('arrow-right', 15, 'link-arrow__arrow') }}
+            </a>
+          </div>
+        {% endfor %}
+      </div>
+
+      <a class="link-arrow" href="{{ url_for('schedule') }}">
+        Open the full schedule {{ icon('arrow-right', 16, 'link-arrow__arrow') }}
+      </a>
+    {% else %}
+      <div class="empty-state">
+        <span class="empty-state__mark">{{ icon('calendar', 28) }}</span>
+        <h3 class="empty-state__title">No sessions published yet</h3>
+        <p class="empty-state__text">
+          The timetable is still being confirmed. Rather than showing an invented
+          programme, this page stays empty until real dates, times and rooms are
+          confirmed and entered in <code>data/events.json</code>.
+        </p>
+        <div class="empty-state__actions">
+          <a class="btn btn--primary" href="{{ url_for('events') }}">
+            Browse the events {{ icon('arrow-right', 18, 'btn__arrow') }}
+          </a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+{# ==========================================================================
+   FINAL CALL TO ACTION
+   ========================================================================== #}
+<section class="section section--accent">
+  <div class="container final-cta">
+    <div>
+      <h2 class="final-cta__title">Ready to be part of Cultura?</h2>
+      <p class="final-cta__text">
+        Registration takes a couple of minutes and gives you a reference number to
+        show at the venue desk. Each event page carries the full details, so you
+        can check everything before you sign up.
+      </p>
+    </div>
+    <div class="final-cta__actions">
+      <a class="btn btn--primary btn--lg" href="{{ url_for('register_account') }}">
+        Create your account {{ icon('user-plus', 18, 'btn__arrow') }}
+      </a>
+      <a class="btn btn--outline btn--lg" href="{{ url_for('faq') }}">{{ icon('help-circle', 18) }} Read the FAQ</a>
+    </div>
+  </div>
+</section>
+
+{# ==========================================================================
+   FESTIVAL HIGHLIGHTS
+   ========================================================================== #}
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <span class="section-head__eyebrow u-mono">Highlights</span>
+      <h2 class="section-head__title">What makes Cultura special</h2>
+    </div>
+
+    <div class="highlights-grid">
+      <article class="highlight-card">
+        <div class="highlight-card__icon">{{ icon('music', 28) }}</div>
+        <h3 class="highlight-card__title">Live Performances</h3>
+        <p class="highlight-card__text">Music, dance, theatre and cultural showcases from talented students.</p>
+      </article>
+      <article class="highlight-card">
+        <div class="highlight-card__icon">{{ icon('palette', 28) }}</div>
+        <h3 class="highlight-card__title">Art & Creativity</h3>
+        <p class="highlight-card__text">Exhibitions, workshops and competitions for visual artists and designers.</p>
+      </article>
+      <article class="highlight-card">
+        <div class="highlight-card__icon">{{ icon('trophy', 28) }}</div>
+        <h3 class="highlight-card__title">Competitions</h3>
+        <p class="highlight-card__text">Compete in literary, cultural and creative challenges with great prizes.</p>
+      </article>
+      <article class="highlight-card">
+        <div class="highlight-card__icon">{{ icon('users', 28) }}</div>
+        <h3 class="highlight-card__title">Community</h3>
+        <p class="highlight-card__text">Connect with fellow students, make friends and build memories together.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

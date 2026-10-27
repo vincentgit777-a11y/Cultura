@@ -1,0 +1,120 @@
+{#-
+  CULTURA — site header.
+  Shared by every page. The active link is resolved with Jinja by comparing
+  the current request path against each route.
+-#}
+{% from 'components/icons.html' import icon %}
+{% from 'components/artwork.html' import wordmark %}
+
+<header class="site-header">
+  <div class="container site-header__inner">
+    <a class="wordmark" href="{{ url_for('index') }}" aria-label="{{ site_name }} — home">
+      {{ wordmark() }}
+      <span class="wordmark__text">
+        <span class="wordmark__name">{{ site_name }}</span>
+        <span class="wordmark__descriptor">{{ site.descriptor | default('College Cultural Festival') }}</span>
+      </span>
+    </a>
+
+    <nav class="site-nav" aria-label="Primary">
+      <ul class="site-nav__list">
+        <li><a class="site-nav__link" href="{{ url_for('index') }}"
+               {% if current_path == '/' %}aria-current="page"{% endif %}>Home</a></li>
+        <li><a class="site-nav__link" href="{{ url_for('events') }}"
+               {% if current_path == '/events' %}aria-current="page"{% endif %}>Events</a></li>
+        <li><a class="site-nav__link" href="{{ url_for('schedule') }}"
+               {% if current_path == '/schedule' %}aria-current="page"{% endif %}>Schedule</a></li>
+        <li><a class="site-nav__link" href="{{ url_for('faq') }}"
+               {% if current_path == '/faq' %}aria-current="page"{% endif %}>FAQ</a></li>
+      </ul>
+    </nav>
+
+    <div class="site-header__actions">
+      {% if is_authenticated %}
+        <div class="user-menu">
+          <button class="user-menu__trigger btn btn--ghost btn--sm" aria-expanded="false" aria-haspopup="true" aria-label="User menu">
+            <span class="user-menu__avatar">{{ current_user.full_name[0] if current_user.full_name else 'U' }}</span>
+            <span class="user-menu__name">{{ current_user.full_name }}</span>
+            {{ icon('chevron-down', 16) }}
+          </button>
+          <div class="user-menu__dropdown" hidden>
+            {% if is_student %}
+              <span class="user-menu__item user-menu__item--disabled">{{ icon('layout-dashboard', 18) }} Dashboard (coming soon)</span>
+              <span class="user-menu__item user-menu__item--disabled">{{ icon('ticket', 18) }} My Registrations (coming soon)</span>
+              <span class="user-menu__item user-menu__item--disabled">{{ icon('users', 18) }} My Teams (coming soon)</span>
+              <span class="user-menu__item user-menu__item--disabled">{{ icon('calendar', 18) }} My Schedule (coming soon)</span>
+              <span class="user-menu__item user-menu__item--disabled">{{ icon('user', 18) }} Profile (coming soon)</span>
+              <hr class="user-menu__divider">
+            {% endif %}
+            {% if is_admin %}
+              <span class="user-menu__item user-menu__item--disabled">{{ icon('layout-dashboard', 18) }} Admin Dashboard (coming soon)</span>
+              <span class="user-menu__item user-menu__item--disabled">{{ icon('calendar', 18) }} Events (coming soon)</span>
+              <span class="user-menu__item user-menu__item--disabled">{{ icon('trophy', 18) }} Competitions (coming soon)</span>
+              <span class="user-menu__item user-menu__item--disabled">{{ icon('ticket', 18) }} Registrations (coming soon)</span>
+              <span class="user-menu__item user-menu__item--disabled">{{ icon('users', 18) }} Teams (coming soon)</span>
+              <span class="user-menu__item user-menu__item--disabled">{{ icon('calendar', 18) }} Schedule (coming soon)</span>
+              <span class="user-menu__item user-menu__item--disabled">{{ icon('image', 18) }} Posters (coming soon)</span>
+              <span class="user-menu__item user-menu__item--disabled">{{ icon('settings', 18) }} Settings (coming soon)</span>
+              <hr class="user-menu__divider">
+            {% endif %}
+            <form method="post" action="{{ url_for('logout') }}" class="user-menu__form">
+              <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
+              <button type="submit" class="user-menu__item user-menu__item--logout">{{ icon('log-out', 18) }} Log out</button>
+            </form>
+          </div>
+        </div>
+      {% else %}
+        <a class="btn btn--ghost btn--sm" href="{{ url_for('login') }}">Sign in</a>
+        <a class="btn btn--primary btn--sm" href="{{ url_for('register_account') }}">Get Started</a>
+      {% endif %}
+      <button class="nav-toggle" id="nav-toggle" type="button"
+              aria-expanded="false" aria-controls="mobile-nav" aria-label="Open menu">
+        <span class="nav-toggle__bars" aria-hidden="true"><span></span></span>
+      </button>
+    </div>
+  </div>
+
+  <div class="mobile-nav" id="mobile-nav" hidden>
+    <ul class="mobile-nav__list">
+      <li><a class="mobile-nav__link" href="{{ url_for('index') }}"
+             {% if current_path == '/' %}aria-current="page"{% endif %}>Home</a></li>
+      <li><a class="mobile-nav__link" href="{{ url_for('events') }}"
+             {% if current_path == '/events' %}aria-current="page"{% endif %}>Events</a></li>
+      <li><a class="mobile-nav__link" href="{{ url_for('schedule') }}"
+             {% if current_path == '/schedule' %}aria-current="page"{% endif %}>Schedule</a></li>
+      <li><a class="mobile-nav__link" href="{{ url_for('faq') }}"
+             {% if current_path == '/faq' %}aria-current="page"{% endif %}>FAQ</a></li>
+      {% if is_authenticated %}
+        <li><hr class="mobile-nav__divider"></li>
+        {% if is_student %}
+          <li><span class="mobile-nav__link mobile-nav__link--disabled">{{ icon('layout-dashboard', 18) }} Dashboard (coming soon)</span></li>
+          <li><span class="mobile-nav__link mobile-nav__link--disabled">{{ icon('ticket', 18) }} My Registrations (coming soon)</span></li>
+          <li><span class="mobile-nav__link mobile-nav__link--disabled">{{ icon('users', 18) }} My Teams (coming soon)</span></li>
+          <li><span class="mobile-nav__link mobile-nav__link--disabled">{{ icon('calendar', 18) }} My Schedule (coming soon)</span></li>
+          <li><span class="mobile-nav__link mobile-nav__link--disabled">{{ icon('user', 18) }} Profile (coming soon)</span></li>
+        {% endif %}
+        {% if is_admin %}
+          <li><span class="mobile-nav__link mobile-nav__link--disabled">{{ icon('layout-dashboard', 18) }} Admin Dashboard (coming soon)</span></li>
+          <li><span class="mobile-nav__link mobile-nav__link--disabled">{{ icon('calendar', 18) }} Events (coming soon)</span></li>
+          <li><span class="mobile-nav__link mobile-nav__link--disabled">{{ icon('trophy', 18) }} Competitions (coming soon)</span></li>
+          <li><span class="mobile-nav__link mobile-nav__link--disabled">{{ icon('ticket', 18) }} Registrations (coming soon)</span></li>
+          <li><span class="mobile-nav__link mobile-nav__link--disabled">{{ icon('users', 18) }} Teams (coming soon)</span></li>
+          <li><span class="mobile-nav__link mobile-nav__link--disabled">{{ icon('calendar', 18) }} Schedule (coming soon)</span></li>
+          <li><span class="mobile-nav__link mobile-nav__link--disabled">{{ icon('image', 18) }} Posters (coming soon)</span></li>
+          <li><span class="mobile-nav__link mobile-nav__link--disabled">{{ icon('settings', 18) }} Settings (coming soon)</span></li>
+        {% endif %}
+        <li>
+          <form method="post" action="{{ url_for('logout') }}">
+            <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
+            <button type="submit" class="mobile-nav__link mobile-nav__link--logout">{{ icon('log-out', 18) }} Log out</button>
+          </form>
+        </li>
+      {% else %}
+        <li><hr class="mobile-nav__divider"></li>
+        <li><a class="mobile-nav__link btn btn--primary btn--block" href="{{ url_for('register_account') }}">{{ icon('user-plus', 18) }} Create Account</a></li>
+        <li><a class="mobile-nav__link" href="{{ url_for('login') }}">{{ icon('log-in', 18) }} Sign in</a></li>
+        <li><a class="mobile-nav__link" href="{{ url_for('admin_login') }}">{{ icon('shield', 18) }} Admin Login</a></li>
+      {% endif %}
+    </ul>
+  </div>
+</header>

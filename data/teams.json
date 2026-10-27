@@ -1,0 +1,22 @@
+{
+  "_readme": [
+    "CULTURA — teams.",
+    "",
+    "Teams are created by students for team-based competitions.",
+    "A team belongs to a specific competition and has a captain (creator).",
+    "",
+    "Field reference:",
+    "  id                 unique identifier (tm_XXXX)",
+    "  competition_slug   slug of the competition this team is for",
+    "  name               team name (unique within competition)",
+    "  captain_id         user ID of the team captain",
+    "  member_ids         list of user IDs (includes captain)",
+    "  max_size           maximum team size for this competition",
+    "  min_size           minimum team size for this competition",
+    "  created_at         ISO 8601 timestamp",
+    "  updated_at         ISO 8601 timestamp",
+    "  registration_id    registration ID if team is registered (optional)",
+    "  status             'draft' | 'registered' | 'cancelled'"
+  ],
+  "teams": []
+}

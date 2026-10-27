@@ -1,0 +1,7 @@
+# CULTURA — college cultural festival management platform
+#
+# Core dependencies
+# Install with:  python -m pip install -r requirements.txt
+
+Flask>=3.0,<4.0
+bcrypt>=4.0,<5.0

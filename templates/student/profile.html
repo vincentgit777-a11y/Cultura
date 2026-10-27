@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% from 'components/icons.html' import icon %}
+
+{% block title %}Profile · {{ site_name }}{% endblock %}
+{% block meta_description %}Manage your Cultura account profile and settings.{% endblock %}
+
+{% block content %}
+<nav class="breadcrumbs" aria-label="Breadcrumb">
+  <div class="container">
+    <ol class="breadcrumbs__list">
+      <li><a href="{{ url_for('index') }}">Home</a></li>
+      <li><a href="{{ url_for('student_dashboard') }}">Dashboard</a></li>
+      <li><span class="breadcrumbs__current" aria-current="page">Profile</span></li>
+    </ol>
+  </div>
+</nav>
+
+<section class="section">
+  <div class="container container--narrow">
+    <header class="profile-header">
+      <div class="profile-avatar">
+        {{ current_user.full_name[0] if current_user.full_name else 'U' }}
+      </div>
+      <h1 class="profile-name">{{ current_user.full_name }}</h1>
+      <p class="profile-email">{{ current_user.email }}</p>
+      <span class="tag tag--primary">{{ current_user.role | capitalize }}</span>
+    </header>
+
+    <div class="card" style="margin-top: var(--sp-6)">
+      <div class="card__header">
+        <h2 class="card__title">Account Information</h2>
+      </div>
+      <div class="card__body">
+        <form method="post" class="form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="full_name" class="form-label">Full Name <span class="required">*</span></label>
+              <input type="text" id="full_name" name="full_name" class="form-input"
+                     value="{{ current_user.full_name }}" required>
+            </div>
+            <div class="form-group">
+              <label for="student_id" class="form-label">Student ID</label>
+              <input type="text" id="student_id" name="student_id" class="form-input"
+                     value="{{ current_user.student_id or '' }}">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="email" class="form-label">Email <span class="required">*</span></label>
+              <input type="email" id="email" name="email" class="form-input"
+                     value="{{ current_user.email }}" disabled>
+              <p class="form-hint">Email cannot be changed. Contact support if you need to update it.</p>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="department" class="form-label">Department <span class="required">*</span></label>
+              <select id="department" name="department" class="form-select" required>
+                <option value="">Select department</option>
+                {% for dept in departments %}
+                  <option value="{{ dept }}" {% if current_user.department == dept %}selected{% endif %}>{{ dept }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="academic_year" class="form-label">Academic Year <span class="required">*</span></label>
+              <select id="academic_year" name="academic_year" class="form-select" required>
+                <option value="">Select year</option>
+                {% for year in academic_years %}
+                  <option value="{{ year }}" {% if current_user.academic_year == year %}selected{% endif %}>{{ year }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="institution" class="form-label">Institution</label>
+              <input type="text" id="institution" name="institution" class="form-input"
+                     value="{{ current_user.institution or '' }}">
+            </div>
+            <div class="form-group">
+              <label for="phone" class="form-label">Phone</label>
+              <input type="tel" id="phone" name="phone" class="form-input"
+                     value="{{ current_user.phone or '' }}" placeholder="+91 98765 43210">
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn--primary">
+              {{ icon('save', 18) }} Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: var(--sp-6)">
+      <div class="card__header">
+        <h2 class="card__title">Security</h2>
+      </div>
+      <div class="card__body">
+        <p class="form-hint">Password change and other security settings coming soon.</p>
+        <a class="btn btn--outline" href="#" disabled>Change Password (coming soon)</a>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: var(--sp-6)">
+      <div class="card__header">
+        <h2 class="card__title">Danger Zone</h2>
+      </div>
+      <div class="card__body">
+        <p class="form-hint">Account deletion is permanent and cannot be undone.</p>
+        <button class="btn btn--outline" style="--btn-bg: var(--error-soft); --btn-fg: var(--error); --btn-border: var(--error);" disabled>
+          {{ icon('trash', 18) }} Delete Account (coming soon)
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

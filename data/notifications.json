@@ -1,0 +1,20 @@
+{
+  "_readme": [
+    "CULTURA — announcements and notifications.",
+    "",
+    "System-wide announcements and user-specific notifications.",
+    "",
+    "Field reference:",
+    "  id              unique identifier (notif_XXXX)",
+    "  type            'announcement' | 'registration_confirmed' | 'registration_cancelled' | 'team_invite' | 'team_joined' | 'schedule_change' | 'general'",
+    "  title           notification title",
+    "  message         notification message",
+    "  user_id         target user ID (null for broadcast announcements)",
+    "  related_type    'event' | 'competition' | 'team' | 'registration' | 'schedule' (optional)",
+    "  related_slug    slug of related entity (optional)",
+    "  is_read         boolean",
+    "  created_at      ISO 8601 timestamp",
+    "  read_at         ISO 8601 timestamp or null"
+  ],
+  "notifications": []
+}

@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% from 'components/icons.html' import icon %}
+
+{% block title %}FAQ · {{ site_name }}{% endblock %}
+{% block meta_description %}Answers to common questions about {{ site_name }}.{% endblock %}
+
+{% block content %}
+
+<section class="page-head">
+  <div class="container page-head__grid">
+    <div>
+      <span class="page-head__eyebrow">Questions</span>
+      <h1 class="page-head__title">Frequently asked questions</h1>
+      <p class="page-head__lead">
+        What participants ask most often. Where a policy has not been confirmed, the
+        answer says so instead of guessing.
+      </p>
+    </div>
+
+    <div class="page-head__aside">
+      <span class="page-head__count">{{ faq_entries|length }}</span>
+      <span class="u-mono u-muted">questions answered</span>
+    </div>
+  </div>
+</section>
+
+<section class="faq-layout">
+  <div class="container" style="display: contents;">
+
+    <div>
+      {% if faq_entries %}
+        <div class="faq-list" data-faq>
+          {% for item in faq_entries %}
+            <div class="faq-item">
+              <h2>
+                <button class="faq-item__trigger" type="button"
+                        aria-expanded="false"
+                        aria-controls="faq-panel-{{ loop.index }}"
+                        id="faq-trigger-{{ loop.index }}">
+                  {{ item.question }}
+                  <span class="faq-item__icon" aria-hidden="true"></span>
+                </button>
+              </h2>
+              <div class="faq-item__panel" id="faq-panel-{{ loop.index }}"
+                   role="region" aria-labelledby="faq-trigger-{{ loop.index }}" hidden>
+                <p>{{ item.answer }}</p>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <span class="empty-state__mark">{{ icon('info', 28) }}</span>
+          <h2 class="empty-state__title">No questions published yet</h2>
+          <p class="empty-state__text">
+            The FAQ is still being written. Questions can be added to the
+            <code>faq</code> list in <code>data/settings.json</code>.
+          </p>
+        </div>
+      {% endif %}
+    </div>
+
+    <aside>
+      <div class="faq-contact">
+        <h2>Still have a question?</h2>
+        {% if site.contact_email %}
+          <p>
+            Send a message to the organisers and they will reply as soon as they can.
+          </p>
+          <a href="mailto:{{ site.contact_email }}">{{ site.contact_email }}</a>
+        {% else %}
+          <p>
+            The organiser contact channel has not been published yet. Once it is
+            confirmed it appears here and in the footer of every page.
+          </p>
+          <p style="margin-bottom: 0;">
+            <a href="{{ url_for('events') }}">Browse the competitions meanwhile →</a>
+          </p>
+        {% endif %}
+      </div>
+
+      <div class="notice notice--lime" style="margin-top: var(--sp-4)">
+        {{ icon('info', 20) }}
+        <p>
+          <strong>About these answers.</strong> Anything the organisers have not
+          confirmed is described as such. We would rather leave a gap than publish
+          a policy that turns out to be wrong.
+        </p>
+      </div>
+    </aside>
+
+  </div>
+</section>
+
+{% endblock %}

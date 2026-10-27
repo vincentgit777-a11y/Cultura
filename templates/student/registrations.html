@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% from 'components/icons.html' import icon %}
+
+{% block title %}My Registrations · {{ site_name }}{% endblock %}
+{% block meta_description %}View and manage your Cultura event registrations.{% endblock %}
+
+{% block content %}
+<nav class="breadcrumbs" aria-label="Breadcrumb">
+  <div class="container">
+    <ol class="breadcrumbs__list">
+      <li><a href="{{ url_for('index') }}">Home</a></li>
+      <li><a href="{{ url_for('student_dashboard') }}">Dashboard</a></li>
+      <li><span class="breadcrumbs__current" aria-current="page">My Registrations</span></li>
+    </ol>
+  </div>
+</nav>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head section-head--split">
+      <div>
+        <span class="section-head__eyebrow u-mono">Registrations</span>
+        <h2 class="section-head__title">All your registrations</h2>
+      </div>
+      <a class="btn btn--primary" href="{{ url_for('events') }}">
+        {{ icon('plus', 18) }} Register for more
+      </a>
+    </div>
+
+    {% if registrations %}
+      <div class="table-wrapper">
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Event</th>
+              <th scope="col">Category</th>
+              <th scope="col">Type</th>
+              <th scope="col">Team</th>
+              <th scope="col">Registered</th>
+              <th scope="col">Status</th>
+              <th scope="col">Reference</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for reg in registrations %}
+            <tr>
+              <td>
+                <a href="{{ url_for('event_detail', slug=reg.event_slug) }}" class="link-strong">
+                  {{ reg.event_title }}
+                </a>
+              </td>
+              <td><span class="tag">{{ reg.category }}</span></td>
+              <td>
+                {% if reg.participant.entry_type == 'team' %}
+                  <span class="tag tag--secondary">Team</span>
+                {% else %}
+                  <span class="tag">Individual</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if reg.participant.entry_type == 'team' %}
+                  {{ reg.participant.team_name }}
+                {% else %}
+                  <span class="u-muted">—</span>
+                {% endif %}
+              </td>
+              <td>{{ reg.created_at[:10] | pretty_date }}</td>
+              <td>
+                <span class="status-badge status-badge--{{ 'open' if reg.status == 'confirmed' else 'closed' }}">
+                  {{ reg.status | capitalize }}
+                </span>
+              </td>
+              <td><code class="ref-code">{{ reg.reference }}</code></td>
+              <td>
+                <a class="btn btn--sm btn--ghost" href="{{ url_for('event_detail', slug=reg.event_slug) }}">
+                  View
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <span class="empty-state__mark">{{ icon('ticket', 28) }}</span>
+        <h2 class="empty-state__title">No registrations yet</h2>
+        <p class="empty-state__text">
+          You haven't registered for any events yet. Explore the programme and
+          sign up for something that interests you!
+        </p>
+        <div class="empty-state__actions">
+          <a class="btn btn--primary" href="{{ url_for('events') }}">
+            Browse events {{ icon('arrow-right', 18, 'btn__arrow') }}
+          </a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

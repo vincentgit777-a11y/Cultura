@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% from 'components/icons.html' import icon %}
+
+{% block title %}Schedule · {{ site_name }}{% endblock %}
+{% block meta_description %}The confirmed running order for the {{ site_name }} programme.{% endblock %}
+
+{% block content %}
+
+<section class="page-head page-head--cobalt">
+  <div class="container page-head__grid">
+    <div>
+      <span class="page-head__eyebrow">Schedule</span>
+      <h1 class="page-head__title">The running order</h1>
+      <p class="page-head__lead">
+        Only confirmed sessions are listed here. Dates, times and rooms appear as soon
+        as the organisers confirm them.
+      </p>
+    </div>
+
+    <div class="page-head__aside">
+      <span class="page-head__count">{{ sessions|length }}</span>
+      <span class="u-mono u-muted">
+        {%- if selected_day != 'all' or selected_category != 'all' -%}
+          sessions matching the current filter
+        {%- else -%}
+          confirmed session{{ '' if sessions|length == 1 else 's' }}
+        {%- endif -%}
+      </span>
+    </div>
+  </div>
+</section>
+
+<section class="directory">
+  <div class="container">
+
+    {% if has_schedule %}
+      {# --------------------------------------------------------------
+          FILTERS
+          -------------------------------------------------------------- #}
+      <form class="filter-bar" method="get" action="{{ url_for('schedule') }}">
+        <div class="filter-bar__group">
+          <label class="filter-bar__label" for="schedule-day">Festival day</label>
+          <select class="select" id="schedule-day" name="day">
+            <option value="all" {% if selected_day == 'all' %}selected{% endif %}>All days</option>
+            {% for day in days %}
+              <option value="{{ day.date }}" {% if selected_day == day.date %}selected{% endif %}>
+                {{ day.date | pretty_date }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="filter-bar__group">
+          <label class="filter-bar__label" for="schedule-category">Category</label>
+          <select class="select" id="schedule-category" name="category">
+            <option value="all" {% if selected_category == 'all' %}selected{% endif %}>All categories</option>
+            {% for category in categories %}
+              <option value="{{ category }}" {% if selected_category == category %}selected{% endif %}>
+                {{ category }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="filter-bar__group">
+          <button class="btn btn--sm" type="submit">Apply</button>
+        </div>
+      </form>
+
+      {% if sessions %}
+        {% set grouped = {} %}
+        {% for session in sessions %}
+          {% set grouped = grouped.update({session.date: grouped.get(session.date, []) + [session]}) or grouped %}
+        {% endfor %}
+
+        {% for date, day_sessions in grouped.items() %}
+          <div class="schedule-day">
+            <h2 class="schedule-day__title">
+              <span class="schedule-day__label">{{ date | pretty_date }}</span>
+            </h2>
+
+            {% for session in day_sessions %}
+              <div class="schedule-entry">
+                <p class="schedule-entry__time">
+                  {{ session.start_time | pretty_time }}
+                  {%- if session.end_time %} <span>→ {{ session.end_time | pretty_time }}</span>{% endif %}
+                </p>
+
+                <div>
+                  <h3 class="schedule-entry__title">
+                    <a href="{{ url_for('event_detail', slug=session.slug) }}">{{ session.title }}</a>
+                  </h3>
+                  <p class="schedule-entry__meta">
+                    <span class="category-label">{{ session.category }}</span>
+                    {%- if session.venue %} · {{ session.venue }}{% endif %}
+                  </p>
+                </div>
+
+                <a class="link-arrow schedule-entry__link"
+                   href="{{ url_for('event_detail', slug=session.slug) }}">
+                  Event details {{ icon('arrow-right', 15, 'link-arrow__arrow') }}
+                </a>
+              </div>
+            {% endfor %}
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state">
+          <span class="empty-state__mark">{{ icon('calendar', 28) }}</span>
+          <h2 class="empty-state__title">Nothing matches that filter</h2>
+          <p class="empty-state__text">
+            No confirmed session matches the day or category you selected. Clear the
+            filter to see everything that has been published.
+          </p>
+          <div class="empty-state__actions">
+            <a class="btn" href="{{ url_for('schedule') }}">Show all sessions</a>
+          </div>
+        </div>
+      {% endif %}
+
+    {% else %}
+      {# --------------------------------------------------------------
+          NO SCHEDULE CONFIRMED YET
+          -------------------------------------------------------------- #}
+      <div class="empty-state">
+        <span class="empty-state__mark">{{ icon('calendar', 28) }}</span>
+        <h2 class="empty-state__title">The timetable has not been published yet</h2>
+        <p class="empty-state__text">
+          Session dates, times and rooms have not been confirmed, so there is nothing
+          to show here. Rather than inventing a programme, this page stays empty
+          until the organisers publish the real one.
+        </p>
+        <p class="form-note" style="max-width: 56ch; margin-inline: auto;">
+          Sessions are driven by the <code>date</code>, <code>start_time</code>,
+          <code>end_time</code> and <code>venue</code> fields of each event in
+          <code>data/events.json</code>. Fill them in and this page builds itself.
+        </p>
+        <div class="empty-state__actions">
+          <a class="btn" href="{{ url_for('events') }}">
+            Browse the competitions {{ icon('arrow-right', 18, 'btn__arrow') }}
+          </a>
+        </div>
+      </div>
+    {% endif %}
+
+  </div>
+</section>
+
+{% endblock %}

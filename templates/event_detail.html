@@ -1,0 +1,349 @@
+{% extends 'base.html' %}
+{% from 'components/icons.html' import icon %}
+{% from 'components/artwork.html' import event_art %}
+{% from 'partials/event_card.html' import event_card %}
+
+{% block title %}{{ event.title }} · {{ site_name }}{% endblock %}
+{% block meta_description %}{{ event.short_description }}{% endblock %}
+
+{% block content %}
+
+<nav class="breadcrumbs" aria-label="Breadcrumb">
+  <div class="container">
+    <ol class="breadcrumbs__list">
+      <li><a href="{{ url_for('index') }}">Home</a></li>
+      <li><a href="{{ url_for('events') }}">Events</a></li>
+      <li><span class="breadcrumbs__current" aria-current="page">{{ event.title }}</span></li>
+    </ol>
+  </div>
+</nav>
+
+{# ==========================================================================
+   EVENT HEADER
+   ========================================================================== #}
+<header class="event-hero">
+  <div class="container event-hero__grid">
+
+    <div>
+      <div class="event-hero__tags">
+        <span class="category-label">{{ event.category }}</span>
+        <span class="status-badge status-badge--{{ event.registration_status }}">
+          {{ 'Open for registration' if event.registration_status == 'open' else 'Registration closed' }}
+        </span>
+      </div>
+
+      <h1 class="event-hero__title">{{ event.title }}</h1>
+      <p class="event-hero__summary">{{ event.short_description }}</p>
+
+      <div class="hero__actions">
+        {% if event.registration_status == 'open' %}
+          <a class="btn" href="{{ url_for('register', slug=event.slug) }}">
+            Register for this event {{ icon('arrow-right', 18, 'btn__arrow') }}
+          </a>
+        {% else %}
+          <span class="btn btn--quiet" aria-disabled="true">Registration is closed</span>
+        {% endif %}
+        <a class="btn btn--quiet" href="{{ url_for('events') }}">Back to all events</a>
+      </div>
+    </div>
+
+    <div class="event-hero__art">
+      {% if event.image %}
+        <img src="{{ url_for('static', filename='images/' + event.image) }}"
+             alt="Illustration for {{ event.title }}" width="340" height="249" loading="lazy">
+      {% else %}
+        {{ event_art(event.category) }}
+      {% endif %}
+    </div>
+
+  </div>
+</header>
+
+{# ==========================================================================
+   EVENT BODY + SUMMARY PANEL
+   ========================================================================== #}
+<section class="event-body">
+  <div class="container split">
+
+    <div class="event-body__main">
+
+      {# --- 01 About --- #}
+      <section class="event-body__section">
+        <h2 class="event-body__heading">
+          <span class="event-body__heading-index">01</span> About this event
+        </h2>
+        <div class="event-body__text">
+          {% for paragraph in event.description.split('\n\n') %}
+            <p>{{ paragraph }}</p>
+          {% endfor %}
+        </div>
+      </section>
+
+      {# --- 02 What you will do --- #}
+      {% if event.highlights %}
+        <section class="event-body__section">
+          <h2 class="event-body__heading">
+            <span class="event-body__heading-index">02</span> What you will do
+          </h2>
+          <div class="highlight-grid">
+            {% for highlight in event.highlights %}
+              <article class="highlight">
+                <span class="highlight__index">{{ '%02d' | format(loop.index) }}</span>
+                <h3 class="highlight__title">{{ highlight.title }}</h3>
+                <p class="highlight__text">{{ highlight.text }}</p>
+              </article>
+            {% endfor %}
+          </div>
+        </section>
+      {% endif %}
+
+      {# --- 03 Eligibility & team --- #}
+      <section class="event-body__section">
+        <h2 class="event-body__heading">
+          <span class="event-body__heading-index">03</span> Eligibility &amp; teams
+        </h2>
+        <dl class="detail-list">
+          <div class="detail-list__row">
+            <dt>Who can enter</dt>
+            <dd>{{ event.eligibility or 'Open to all students of the participating institution.' }}</dd>
+          </div>
+          <div class="detail-list__row">
+            <dt>Team requirements</dt>
+            <dd>{{ event.team_requirements or 'Individual entry.' }}</dd>
+          </div>
+          <div class="detail-list__row">
+            <dt>Entry type</dt>
+            <dd>
+              {% if event.participation_type == 'individual' %}
+                Individual only
+              {% elif event.participation_type == 'team' %}
+                Team entry — {{ event.min_team_size }} to {{ event.max_team_size }} members
+              {% else %}
+                Individual entry, or a team of {{ event.min_team_size }} to {{ event.max_team_size }} members
+              {% endif %}
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      {# --- 04 Rules --- #}
+      {% if event.rules %}
+        <section class="event-body__section">
+          <h2 class="event-body__heading">
+            <span class="event-body__heading-index">04</span> Rules &amp; prerequisites
+          </h2>
+          <ol class="numbered-list">
+            {% for rule in event.rules %}
+              <li class="numbered-list__item">
+                <div class="numbered-list__body">{{ rule }}</div>
+              </li>
+            {% endfor %}
+          </ol>
+        </section>
+      {% endif %}
+
+      {# --- 05 Milestones --- #}
+      {% if event.milestones %}
+        <section class="event-body__section">
+          <h2 class="event-body__heading">
+            <span class="event-body__heading-index">05</span> Schedule &amp; milestones
+          </h2>
+          <div class="schedule-day">
+            {% for milestone in event.milestones %}
+              <div class="schedule-entry">
+                <p class="schedule-entry__time">
+                  {% if milestone.time %}{{ milestone.time }}{% else %}<span>Time TBC</span>{% endif %}
+                </p>
+                <div>
+                  <h3 class="schedule-entry__title">{{ milestone.title }}</h3>
+                  {% if milestone.description %}
+                    <p class="schedule-entry__meta">{{ milestone.description }}</p>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </section>
+      {% endif %}
+
+      {# --- 06 Prizes --- #}
+      <section class="event-body__section">
+        <h2 class="event-body__heading">
+          <span class="event-body__heading-index">06</span> Prizes &amp; recognition
+        </h2>
+        {% set prizes = event.prizes %}
+        {% if prizes.first or prizes.second or prizes.third or prizes.participation %}
+          <table class="prize-table">
+            <thead>
+              <tr>
+                <th scope="col">Place</th>
+                <th scope="col">Recognition</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if prizes.first %}
+                <tr><th scope="row">1st</th><td>{{ prizes.first }}</td></tr>{% endif %}
+              {% if prizes.second %}
+                <tr><th scope="row">2nd</th><td>{{ prizes.second }}</td></tr>{% endif %}
+              {% if prizes.third %}
+                <tr><th scope="row">3rd</th><td>{{ prizes.third }}</td></tr>{% endif %}
+              {% if prizes.participation %}
+                <tr><th scope="row">Participation</th><td>{{ prizes.participation }}</td></tr>{% endif %}
+            </tbody>
+          </table>
+        {% else %}
+          <div class="notice notice--warning">
+            {{ icon('info', 20) }}
+            <p>
+              <strong>Prize details have not been confirmed yet.</strong>
+              The prize structure for this competition will be published by the
+              organisers once it is finalised. Nothing is listed here rather than
+              showing an invented amount.
+            </p>
+          </div>
+        {% endif %}
+      </section>
+
+      {# --- 07 Event FAQ --- #}
+      {% if event.faq %}
+        <section class="event-body__section">
+          <h2 class="event-body__heading">
+            <span class="event-body__heading-index">07</span> Questions about this event
+          </h2>
+          <div class="faq-list" data-faq>
+            {% for item in event.faq %}
+              <div class="faq-item">
+                <h3>
+                  <button class="faq-item__trigger" type="button"
+                          aria-expanded="false" aria-controls="event-faq-{{ loop.index }}"
+                          id="event-faq-trigger-{{ loop.index }}">
+                    {{ item.question }}
+                    <span class="faq-item__icon" aria-hidden="true"></span>
+                  </button>
+                </h3>
+                <div class="faq-item__panel" id="event-faq-{{ loop.index }}"
+                     role="region" aria-labelledby="event-faq-trigger-{{ loop.index }}" hidden>
+                  <p>{{ item.answer }}</p>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </section>
+      {% endif %}
+    </div>
+
+    {# ------------------------------------------------------------------
+        SUMMARY PANEL
+        ------------------------------------------------------------------ #}
+    <aside class="split__aside">
+      <div class="summary-panel">
+        <div class="summary-panel__head">
+          <h2>Event summary</h2>
+        </div>
+        <div class="summary-panel__body">
+          <dl class="summary-list">
+            <div class="summary-list__row">
+              <dt>Category</dt>
+              <dd>{{ event.category }}</dd>
+            </div>
+            <div class="summary-list__row">
+              <dt>Date</dt>
+              <dd>
+                {% if event.date %}
+                  {{ event.date | pretty_date }}
+                {% else %}
+                  <span class="tbc">To be confirmed</span>
+                {% endif %}
+              </dd>
+            </div>
+            <div class="summary-list__row">
+              <dt>Time</dt>
+              <dd>
+                {% if event.start_time %}
+                  {{ event.start_time | pretty_time }}
+                  {%- if event.end_time %} – {{ event.end_time | pretty_time }}{% endif %}
+                {% else %}
+                  <span class="tbc">To be confirmed</span>
+                {% endif %}
+              </dd>
+            </div>
+            <div class="summary-list__row">
+              <dt>Venue</dt>
+              <dd>
+                {% if event.venue %}
+                  {{ event.venue }}
+                {% else %}
+                  <span class="tbc">To be confirmed</span>
+                {% endif %}
+              </dd>
+            </div>
+            <div class="summary-list__row">
+              <dt>Format</dt>
+              <dd>
+                {% if event.participation_type == 'individual' %}
+                  Individual
+                {% elif event.participation_type == 'team' %}
+                  Team of {{ event.min_team_size }}–{{ event.max_team_size }}
+                {% else %}
+                  Individual or team
+                {% endif %}
+              </dd>
+            </div>
+            <div class="summary-list__row">
+              <dt>Registration</dt>
+              <dd>
+                <span class="status-badge status-badge--{{ event.registration_status }}">
+                  {{ 'Open' if event.registration_status == 'open' else 'Closed' }}
+                </span>
+              </dd>
+            </div>
+          </dl>
+
+          {% if event.registration_status == 'open' %}
+            <a class="btn btn--block" style="margin-top: var(--sp-5)"
+               href="{{ url_for('register', slug=event.slug) }}">
+              Register now {{ icon('arrow-right', 18, 'btn__arrow') }}
+            </a>
+          {% else %}
+            <p class="form-note" style="margin-top: var(--sp-4)">
+              Registration for this competition is currently closed.
+            </p>
+          {% endif %}
+
+          <p class="form-note" style="margin-top: var(--sp-4)">
+            Fields marked “to be confirmed” are waiting on the organisers and can be
+            filled in directly in <code>data/events.json</code>.
+          </p>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+</section>
+
+{# ==========================================================================
+   RELATED EVENTS
+   ========================================================================== #}
+{% if related_events %}
+<section class="section section--ruled">
+  <div class="container">
+    <div class="section-head section-head--split">
+      <div>
+        <span class="section-head__eyebrow u-mono">Keep looking</span>
+        <h2 class="section-head__title">Other competitions</h2>
+      </div>
+      <p class="section-head__lead">
+        More from the programme — including other {{ event.category }} competitions.
+      </p>
+    </div>
+
+    <div class="grid grid--events">
+      {% for related in related_events %}
+        {{ event_card(related) }}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}

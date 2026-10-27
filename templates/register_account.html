@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+{% from 'components/icons.html' import icon %}
+
+{% block title %}Create Account · {{ site_name }}{% endblock %}
+{% block meta_description %}Create your Cultura student account to register for events, join teams, and manage your festival schedule.{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+    <div class="auth-card">
+      <div class="auth-card__header">
+        <h1 class="auth-card__title">Create your account</h1>
+        <p class="auth-card__subtitle">Join Cultura and start registering for events</p>
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-list">
+            {% for category, message in messages %}
+              <div class="flash flash--{{ category }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <form method="post" class="auth-form" novalidate>
+        <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="full_name" class="form-label">Full Name <span class="required">*</span></label>
+            <input type="text"
+                   id="full_name"
+                   name="full_name"
+                   class="form-input {% if errors.full_name %}form-input--error{% endif %}"
+                   value="{{ form_data.full_name or '' }}"
+                   placeholder="Your full name"
+                   autocomplete="name"
+                   required>
+            {% if errors.full_name %}
+              <span class="form-error">{{ errors.full_name }}</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="email" class="form-label">Email <span class="required">*</span></label>
+            <input type="email"
+                   id="email"
+                   name="email"
+                   class="form-input {% if errors.email %}form-input--error{% endif %}"
+                   value="{{ form_data.email or '' }}"
+                   placeholder="you@example.edu"
+                   autocomplete="email"
+                   required>
+            {% if errors.email %}
+              <span class="form-error">{{ errors.email }}</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="password" class="form-label">Password <span class="required">*</span></label>
+            <input type="password"
+                   id="password"
+                   name="password"
+                   class="form-input {% if errors.password %}form-input--error{% endif %}"
+                   placeholder="At least 8 characters"
+                   autocomplete="new-password"
+                   required>
+            {% if errors.password %}
+              <span class="form-error">{{ errors.password }}</span>
+            {% endif %}
+            <span class="form-hint">Must be at least 8 characters</span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="confirm_password" class="form-label">Confirm Password <span class="required">*</span></label>
+            <input type="password"
+                   id="confirm_password"
+                   name="confirm_password"
+                   class="form-input {% if errors.confirm_password %}form-input--error{% endif %}"
+                   placeholder="Confirm your password"
+                   autocomplete="new-password"
+                   required>
+            {% if errors.confirm_password %}
+              <span class="form-error">{{ errors.confirm_password }}</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <hr class="form-divider">
+        <h3 class="form-section-title">Student Information</h3>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="student_id" class="form-label">Student ID (optional)</label>
+            <input type="text"
+                   id="student_id"
+                   name="student_id"
+                   class="form-input"
+                   value="{{ form_data.student_id or '' }}"
+                   placeholder="Your student ID number"
+                   autocomplete="off">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="institution" class="form-label">Institution <span class="required">*</span></label>
+            <input type="text"
+                   id="institution"
+                   name="institution"
+                   class="form-input {% if errors.institution %}form-input--error{% endif %}"
+                   value="{{ form_data.institution or '' }}"
+                   placeholder="Your college/university name"
+                   autocomplete="organization"
+                   required>
+            {% if errors.institution %}
+              <span class="form-error">{{ errors.institution }}</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="department" class="form-label">Department <span class="required">*</span></label>
+            <select id="department" name="department" class="form-select {% if errors.department %}form-select--error{% endif %}" required>
+              <option value="">Select your department</option>
+              {% for dept in departments %}
+                <option value="{{ dept }}" {% if form_data.department == dept %}selected{% endif %}>{{ dept }}</option>
+              {% endfor %}
+            </select>
+            {% if errors.department %}
+              <span class="form-error">{{ errors.department }}</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="academic_year" class="form-label">Academic Year <span class="required">*</span></label>
+            <select id="academic_year" name="academic_year" class="form-select {% if errors.academic_year %}form-select--error{% endif %}" required>
+              <option value="">Select your year</option>
+              {% for year in academic_years %}
+                <option value="{{ year }}" {% if form_data.academic_year == year %}selected{% endif %}>{{ year }}</option>
+              {% endfor %}
+            </select>
+            {% if errors.academic_year %}
+              <span class="form-error">{{ errors.academic_year }}</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="phone" class="form-label">Phone (optional)</label>
+            <input type="tel"
+                   id="phone"
+                   name="phone"
+                   class="form-input"
+                   value="{{ form_data.phone or '' }}"
+                   placeholder="+91 98765 43210"
+                   autocomplete="tel">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn--primary btn--block">
+          Create Account {{ icon('arrow-right', 18, 'btn__arrow') }}
+        </button>
+      </form>
+
+      <p class="auth-card__footer">
+        Already have an account? <a href="{{ url_for('login') }}">Sign in</a>
+      </p>
+    </div>
+  </div>
+</section>
+{% endblock %}

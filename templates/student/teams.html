@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% from 'components/icons.html' import icon %}
+
+{% block title %}My Teams · {{ site_name }}{% endblock %}
+{% block meta_description %}Manage your Cultura competition teams.{% endblock %}
+
+{% block content %}
+<nav class="breadcrumbs" aria-label="Breadcrumb">
+  <div class="container">
+    <ol class="breadcrumbs__list">
+      <li><a href="{{ url_for('index') }}">Home</a></li>
+      <li><a href="{{ url_for('student_dashboard') }}">Dashboard</a></li>
+      <li><span class="breadcrumbs__current" aria-current="page">My Teams</span></li>
+    </ol>
+  </div>
+</nav>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head section-head--split">
+      <div>
+        <span class="section-head__eyebrow u-mono">Teams</span>
+        <h2 class="section-head__title">Your competition teams</h2>
+      </div>
+      <a class="btn btn--primary" href="{{ url_for('competitions') }}">
+        {{ icon('plus', 18) }} Join a competition
+      </a>
+    </div>
+
+    {% if teams %}
+      <div class="teams-list">
+        {% for team in teams %}
+        <article class="team-card">
+          <div class="team-card__info">
+            <h3 class="team-card__name">{{ team.name }}</h3>
+            <p class="team-card__competition">{{ team.competition_slug | replace('-', ' ') | title }}</p>
+          </div>
+          <div class="team-card__meta">
+            <span class="team-card__status {% if team.status == 'registered' %}status-badge status-badge--open{% else %}status-badge status-badge--closed{% endif %}">
+              {{ team.status | capitalize }}
+            </span>
+            <span class="team-card__size">{{ team.member_ids|length }} / {{ team.max_size }} members</span>
+            {% if team.captain_id == current_user.id %}
+              <span class="tag tag--primary">Captain</span>
+            {% endif %}
+          </div>
+          <div class="team-card__members">
+            <h4 class="team-card__members-title">Members</h4>
+            <ul class="member-list-inline">
+              {% for member_id in team.member_ids %}
+                {% set member = find_user_by_id(member_id) %}
+                <li class="member-inline">
+                  {% if member %}
+                    <span class="member-inline__avatar">{{ member.full_name[0] }}</span>
+                    <span class="member-inline__name">{{ member.full_name }}</span>
+                    {% if member.id == team.captain_id %}
+                      <span class="tag tag--primary tag--xs">Captain</span>
+                    {% endif %}
+                  {% else %}
+                    <span class="member-inline__name u-muted">Unknown user</span>
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+          <div class="team-card__actions">
+            <a class="btn btn--sm btn--ghost" href="{{ url_for('competition_detail', slug=team.competition_slug) }}">
+              {{ icon('trophy', 16) }} View Competition
+            </a>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <span class="empty-state__mark">{{ icon('users', 28) }}</span>
+        <h2 class="empty-state__title">No teams yet</h2>
+        <p class="empty-state__text">
+          You're not part of any teams yet. Browse competitions that support team
+          participation and create or join a team!
+        </p>
+        <div class="empty-state__actions">
+          <a class="btn btn--primary" href="{{ url_for('competitions') }}">
+            Browse competitions {{ icon('arrow-right', 18, 'btn__arrow') }}
+          </a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+{# Helper macro for finding user by ID #}
+{% macro find_user_by_id(user_id) %}
+  {% for user in load_users() if user.id == user_id %}
+    {{ user }}
+  {% endfor %}
+{% endmacro %}
+{% endblock %}

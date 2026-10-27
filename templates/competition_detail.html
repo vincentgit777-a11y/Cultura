@@ -1,0 +1,352 @@
+{% extends 'base.html' %}
+{% from 'components/icons.html' import icon %}
+{% from 'components/artwork.html' import event_art %}
+{% from 'partials/event_card.html' import event_card %}
+
+{% block title %}{{ competition.title }} · {{ site_name }}{% endblock %}
+{% block meta_description %}{{ competition.short_description }}{% endblock %}
+
+{% block content %}
+
+<nav class="breadcrumbs" aria-label="Breadcrumb">
+  <div class="container">
+    <ol class="breadcrumbs__list">
+      <li><a href="{{ url_for('index') }}">Home</a></li>
+      <li><a href="{{ url_for('competitions') }}">Competitions</a></li>
+      <li><span class="breadcrumbs__current" aria-current="page">{{ competition.title }}</span></li>
+    </ol>
+  </div>
+</nav>
+
+{# ==========================================================================
+   COMPETITION HERO
+   ========================================================================== #}
+<header class="event-hero">
+  <div class="container event-hero__grid">
+
+    <div>
+      <div class="event-hero__tags">
+        <span class="category-label">{{ competition.category }}</span>
+        <span class="status-badge status-badge--{{ competition.registration_status }}">
+          {{ 'Open for registration' if competition.registration_status == 'open' else 'Registration closed' }}
+        </span>
+      </div>
+
+      <h1 class="event-hero__title">{{ competition.title }}</h1>
+      <p class="event-hero__summary">{{ competition.short_description }}</p>
+
+      <div class="hero__actions">
+        {% if competition.registration_status == 'open' %}
+          <a class="btn btn--primary" href="{{ url_for('register_competition', slug=competition.slug) }}">
+            Register for this competition {{ icon('arrow-right', 18, 'btn__arrow') }}
+          </a>
+        {% else %}
+          <span class="btn btn--ghost" aria-disabled="true">Registration is closed</span>
+        {% endif %}
+        <a class="btn btn--ghost" href="{{ url_for('competitions') }}">Back to all competitions</a>
+      </div>
+    </div>
+
+    <div class="event-hero__art">
+      {% if competition.image %}
+        <img src="{{ url_for('static', filename='images/' + competition.image) }}"
+             alt="Illustration for {{ competition.title }}" width="340" height="249" loading="lazy">
+      {% else %}
+        {{ event_art(competition.category) }}
+      {% endif %}
+    </div>
+
+  </div>
+</header>
+
+{# ==========================================================================
+   COMPETITION BODY + SUMMARY PANEL
+   ========================================================================== #}
+<section class="event-body">
+  <div class="container split">
+
+    <div class="event-body__main">
+
+      {# --- 01 About --- #}
+      <section class="event-body__section">
+        <h2 class="event-body__heading">
+          <span class="event-body__heading-index">01</span> About this competition
+        </h2>
+        <div class="event-body__text">
+          {% for paragraph in competition.description.split('\n\n') %}
+            <p>{{ paragraph }}</p>
+          {% endfor %}
+        </div>
+      </section>
+
+      {# --- 02 What you will do --- #}
+      {% if competition.judging_criteria %}
+      <section class="event-body__section">
+        <h2 class="event-body__heading">
+          <span class="event-body__heading-index">02</span> Judging criteria
+        </h2>
+        <div class="highlight-grid">
+          {% for criterion in competition.judging_criteria %}
+            <article class="highlight">
+              <span class="highlight__index">{{ '%02d' | format(loop.index) }}</span>
+              <h3 class="highlight__title">{{ criterion }}</h3>
+            </article>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+
+      {# --- 03 Eligibility & team --- #}
+      <section class="event-body__section">
+        <h2 class="event-body__heading">
+          <span class="event-body__heading-index">03</span> Eligibility & teams
+        </h2>
+        <dl class="detail-list">
+          <div class="detail-list__row">
+            <dt>Who can enter</dt>
+            <dd>{{ competition.eligibility or 'Open to all students of the participating institution.' }}</dd>
+          </div>
+          <div class="detail-list__row">
+            <dt>Entry type</dt>
+            <dd>
+              {% if competition.participation_type == 'individual' %}
+                Individual only
+              {% elif competition.participation_type == 'team' %}
+                Team entry — {{ competition.min_team_size }} to {{ competition.max_team_size }} members
+              {% else %}
+                Individual entry, or a team of {{ competition.min_team_size }} to {{ competition.max_team_size }} members
+              {% endif %}
+            </dd>
+          </div>
+          <div class="detail-list__row">
+            <dt>Team size</dt>
+            <dd>{{ competition.min_team_size }}–{{ competition.max_team_size }} members</dd>
+          </div>
+        </dl>
+      </section>
+
+      {# --- 04 Rules --- #}
+      {% if competition.rules %}
+      <section class="event-body__section">
+        <h2 class="event-body__heading">
+          <span class="event-body__heading-index">04</span> Rules & prerequisites
+        </h2>
+        <ol class="numbered-list">
+          {% for rule in competition.rules %}
+            <li class="numbered-list__item">
+              <div class="numbered-list__body">{{ rule }}</div>
+            </li>
+          {% endfor %}
+        </ol>
+      </section>
+      {% endif %}
+
+      {# --- 05 Prizes --- #}
+      <section class="event-body__section">
+        <h2 class="event-body__heading">
+          <span class="event-body__heading-index">05</span> Prizes & recognition
+        </h2>
+        {% set prizes = competition.prizes %}
+        {% if prizes.first or prizes.second or prizes.third or prizes.participation %}
+          <table class="prize-table">
+            <thead>
+              <tr>
+                <th scope="col">Place</th>
+                <th scope="col">Recognition</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if prizes.first %}
+                <tr><th scope="row">1st</th><td>{{ prizes.first }}</td></tr>{% endif %}
+              {% if prizes.second %}
+                <tr><th scope="row">2nd</th><td>{{ prizes.second }}</td></tr>{% endif %}
+              {% if prizes.third %}
+                <tr><th scope="row">3rd</th><td>{{ prizes.third }}</td></tr>{% endif %}
+              {% if prizes.participation %}
+                <tr><th scope="row">Participation</th><td>{{ prizes.participation }}</td></tr>{% endif %}
+            </tbody>
+          </table>
+        {% else %}
+          <div class="notice notice--warning">
+            {{ icon('info', 20) }}
+            <p>
+              <strong>Prize details have not been confirmed yet.</strong>
+              The prize structure for this competition will be published by the
+              organisers once it is finalised. Nothing is listed here rather than
+              showing an invented amount.
+            </p>
+          </div>
+        {% endif %}
+      </section>
+
+      {# --- 06 Competition FAQ --- #}
+      {% if competition.faq %}
+      <section class="event-body__section">
+        <h2 class="event-body__heading">
+          <span class="event-body__heading-index">06</span> Questions about this competition
+        </h2>
+        <div class="faq-list" data-faq>
+          {% for item in competition.faq %}
+            <div class="faq-item">
+              <h3>
+                <button class="faq-item__trigger" type="button"
+                        aria-expanded="false" aria-controls="comp-faq-{{ loop.index }}"
+                        id="comp-faq-trigger-{{ loop.index }}">
+                  {{ item.question }}
+                  <span class="faq-item__icon" aria-hidden="true"></span>
+                </button>
+              </h3>
+              <div class="faq-item__panel" id="comp-faq-{{ loop.index }}"
+                   role="region" aria-labelledby="comp-faq-trigger-{{ loop.index }}" hidden>
+                <p>{{ item.answer }}</p>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+
+      {# --- 07 Registration dates --- #}
+      <section class="event-body__section">
+        <h2 class="event-body__heading">
+          <span class="event-body__heading-index">07</span> Registration timeline
+        </h2>
+        <dl class="detail-list">
+          {% if competition.registration_opens_at %}
+          <div class="detail-list__row">
+            <dt>Registration opens</dt>
+            <dd>{{ competition.registration_opens_at[:10] | pretty_date }}</dd>
+          </div>
+          {% endif %}
+          {% if competition.registration_closes_at %}
+          <div class="detail-list__row">
+            <dt>Registration closes</dt>
+            <dd>{{ competition.registration_closes_at[:10] | pretty_date }}</dd>
+          </div>
+          {% endif %}
+          {% if competition.capacity %}
+          <div class="detail-list__row">
+            <dt>Capacity</dt>
+            <dd>{{ competition.capacity }} participants</dd>
+          </div>
+          {% endif %}
+        </dl>
+      </section>
+
+    </div>
+
+    {# ------------------------------------------------------------------
+        SUMMARY PANEL
+        ------------------------------------------------------------------ #}
+    <aside class="split__aside">
+      <div class="summary-panel">
+        <div class="summary-panel__head">
+          <h2>Competition summary</h2>
+        </div>
+        <div class="summary-panel__body">
+          <dl class="summary-list">
+            <div class="summary-list__row">
+              <dt>Category</dt>
+              <dd>{{ competition.category }}</dd>
+            </div>
+            <div class="summary-list__row">
+              <dt>Date</dt>
+              <dd>
+                {% if competition.date %}
+                  {{ competition.date | pretty_date }}
+                {% else %}
+                  <span class="tbc">To be confirmed</span>
+                {% endif %}
+              </dd>
+            </div>
+            <div class="summary-list__row">
+              <dt>Time</dt>
+              <dd>
+                {% if competition.start_time %}
+                  {{ competition.start_time | pretty_time }}
+                  {%- if competition.end_time %} – {{ competition.end_time | pretty_time }}{% endif %}
+                {% else %}
+                  <span class="tbc">To be confirmed</span>
+                {% endif %}
+              </dd>
+            </div>
+            <div class="summary-list__row">
+              <dt>Venue</dt>
+              <dd>
+                {% if competition.venue %}
+                  {{ competition.venue }}
+                {% else %}
+                  <span class="tbc">To be confirmed</span>
+                {% endif %}
+              </dd>
+            </div>
+            <div class="summary-list__row">
+              <dt>Format</dt>
+              <dd>
+                {% if competition.participation_type == 'individual' %}
+                  Individual
+                {% elif competition.participation_type == 'team' %}
+                  Team of {{ competition.min_team_size }}–{{ competition.max_team_size }}
+                {% else %}
+                  Individual or team
+                {% endif %}
+              </dd>
+            </div>
+            <div class="summary-list__row">
+              <dt>Registration</dt>
+              <dd>
+                <span class="status-badge status-badge--{{ competition.registration_status }}">
+                  {{ 'Open' if competition.registration_status == 'open' else 'Closed' }}
+                </span>
+              </dd>
+            </div>
+          </dl>
+
+          {% if competition.registration_status == 'open' %}
+            <a class="btn btn--primary btn--block" style="margin-top: var(--sp-5)"
+               href="{{ url_for('register_competition', slug=competition.slug) }}">
+              Register now {{ icon('arrow-right', 18, 'btn__arrow') }}
+            </a>
+          {% else %}
+            <p class="form-note" style="margin-top: var(--sp-4)">
+              Registration for this competition is currently closed.
+            </p>
+          {% endif %}
+
+          <p class="form-note" style="margin-top: var(--sp-4)">
+            Fields marked “to be confirmed” are waiting on the organisers and can be
+            filled in directly in <code>data/competitions.json</code>.
+          </p>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+</section>
+
+{# ==========================================================================
+   RELATED COMPETITIONS
+   ========================================================================== #}
+{% if related_competitions %}
+<section class="section section--ruled">
+  <div class="container">
+    <div class="section-head section-head--split">
+      <div>
+        <span class="section-head__eyebrow u-mono">Keep looking</span>
+        <h2 class="section-head__title">Other competitions</h2>
+      </div>
+      <p class="section-head__lead">
+        More from the programme — including other {{ competition.category }} competitions.
+      </p>
+    </div>
+
+    <div class="grid grid--events">
+      {% for related in related_competitions %}
+        {{ event_card(related) }}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}

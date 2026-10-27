@@ -1,0 +1,25 @@
+{
+  "_readme": [
+    "CULTURA — user accounts.",
+    "",
+    "This file stores all user accounts (students and admins).",
+    "Passwords are stored as bcrypt hashes, never plaintext.",
+    "",
+    "Field reference:",
+    "  id                 unique identifier (usr_XXXX)",
+    "  email              unique, lowercase, used for login",
+    "  password_hash      bcrypt hash of the password",
+    "  role               'student' or 'admin'",
+    "  full_name          display name",
+    "  student_id         optional student ID number (for students)",
+    "  department         department (for students)",
+    "  academic_year      year of study (for students)",
+    "  phone              optional phone number",
+    "  institution        institution name (for students)",
+    "  created_at         ISO 8601 timestamp",
+    "  updated_at         ISO 8601 timestamp",
+    "  last_login_at      ISO 8601 timestamp or null",
+    "  is_active          boolean, can be deactivated"
+  ],
+  "users": []
+}

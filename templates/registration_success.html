@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% from 'components/icons.html' import icon %}
+
+{% block title %}Registration confirmed · {{ site_name }}{% endblock %}
+{% block meta_description %}Your registration for {{ record.event_title }} has been recorded.{% endblock %}
+
+{% block content %}
+
+<section class="success">
+  <div class="container">
+    <div class="success__card">
+
+      <span class="success__mark" aria-hidden="true">{{ icon('check', 34) }}</span>
+
+      <span class="page-head__eyebrow" style="margin-bottom: var(--sp-3)">Registration received</span>
+
+      <h1 class="success__title">You are registered for {{ record.event_title }}.</h1>
+
+      <p class="success__lead">
+        Thank you, {{ record.participant.full_name }}. Keep the reference number below —
+        you will be asked for it at the venue desk.
+      </p>
+
+      <div class="success__reference">
+        <span class="success__reference-label">Registration reference</span>
+        <span class="success__reference-value">{{ record.reference }}</span>
+      </div>
+
+      <div class="success__next">
+        <h2 class="success__next-title">What happens next</h2>
+        <ul class="check-list">
+          <li class="check-list__item">
+            <span>Your place is held. Bring your reference number to the venue desk.</span>
+          </li>
+          <li class="check-list__item">
+            <span>Read the event's rule sheet again — the rules are enforced on the day.</span>
+          </li>
+          <li class="check-list__item">
+            <span>Watch the schedule page for a confirmed time and room.</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="notice" style="margin-bottom: var(--sp-6)">
+        {{ icon('info', 20) }}
+        <p>
+          <strong>No email has been sent.</strong> This site has no mail service
+          configured, so the confirmation exists only in this browser session and in
+          the organiser's local registration file. The reference above is the only
+          copy — note it down.
+        </p>
+      </div>
+
+      <div class="success__actions">
+        <a class="btn" href="{{ url_for('event_detail', slug=record.event_slug) }}">
+          Back to the event {{ icon('arrow-right', 18, 'btn__arrow') }}
+        </a>
+        <a class="btn btn--quiet" href="{{ url_for('events') }}">
+          Discover other competitions
+        </a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,179 @@
+/* ==========================================================================
+   CULTURA — tokens.css
+   The single source of truth for the visual identity.
+
+   Every colour, font, space, radius, shadow and transition used anywhere in
+   the site is declared here. Component stylesheets must reference these
+   tokens instead of writing raw values, so the whole site can be re-themed
+   from this one file.
+   ========================================================================== */
+
+:root {
+  /* -------------------------------------------------------------------
+     1. CULTURA BRAND COLOURS — Soft Neo-Brutalist Palette
+     ------------------------------------------------------------------- */
+  --cream: #FFF6E8;            /* Warm cream — page canvas */
+  --marigold: #F6C453;         /* Marigold — primary accent */
+  --rose: #F4A6B5;             /* Rose — secondary accent */
+  --mint: #BCE8D0;             /* Mint — success/positive */
+  --periwinkle: #B8C7F5;       /* Periwinkle — info/links */
+  --lavender: #D9C5F2;         /* Lavender — tertiary accent */
+  --peach: #FFC9A9;            /* Peach — warm highlights */
+  --deep-plum: #55364B;        /* Deep plum — type, navigation, primary CTA */
+
+  /* -------------------------------------------------------------------
+     2. SUPPORTING COLOURS
+     ------------------------------------------------------------------- */
+  --surface: #FFFFFF;          /* White surface */
+  --border: #E8DCC8;           /* Subtle border - cream tinted */
+  --border-strong: #55364B;    /* High-contrast border - deep plum */
+  --muted: #8B7D7A;            /* Muted text */
+  --success: #2D7D4E;          /* Success - darker mint */
+  --error: #C0392B;            /* Error */
+  --error-soft: #FDEDEA;
+  --success-soft: #E8F5ED;
+  --warning: #D4A843;          /* Warning - darker marigold */
+  --warning-soft: #FEF3E2;
+
+  /* Semantic aliases */
+  --bg-page: var(--cream);
+  --bg-surface: var(--surface);
+  --bg-raised: #FFFCF5;
+  --bg-inverse: var(--deep-plum);
+  --text-strong: var(--deep-plum);
+  --text-body: #4A3D3A;
+  --text-muted: var(--muted);
+  --text-on-accent: var(--deep-plum);
+  --text-on-dark: #FFF6E8;
+  --accent: var(--marigold);
+  --accent-alt: var(--rose);
+  --highlight: var(--peach);
+  --focus-ring: var(--periwinkle);
+
+  /* -------------------------------------------------------------------
+     3. TYPOGRAPHY
+     ------------------------------------------------------------------- */
+  --font-display: 'Space Grotesk', 'Segoe UI', 'Helvetica Neue', system-ui, sans-serif;
+  --font-ui: 'Inter', 'Segoe UI', 'Helvetica Neue', system-ui, -apple-system, Arial, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Cascadia Mono', Consolas, 'Courier New', monospace;
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+  --fw-black: 900;
+
+  /* Fluid type scale — desktop values are the upper bound */
+  --fs-hero: clamp(3rem, 1.5rem + 7vw, 8rem);              /* 48px -> 128px */
+  --fs-h1: clamp(2.5rem, 1.5rem + 4vw, 4.5rem);            /* 40px -> 72px */
+  --fs-h2: clamp(2rem, 1.3rem + 2.5vw, 3rem);              /* 32px -> 48px */
+  --fs-h3: clamp(1.5rem, 1.2rem + 1.2vw, 2rem);            /* 24px -> 32px */
+  --fs-h4: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);         /* 20px -> 24px */
+  --fs-body-lg: clamp(1.125rem, 1rem + 0.3vw, 1.25rem);    /* 18px -> 20px */
+  --fs-body: 1rem;                                           /* 16px */
+  --fs-body-sm: 0.9375rem;                                   /* 15px */
+  --fs-meta: 0.8125rem;                                      /* 13px */
+  --fs-meta-sm: 0.75rem;                                     /* 12px */
+
+  --lh-tight: 1.05;
+  --lh-snug: 1.2;
+  --lh-normal: 1.6;
+  --lh-relaxed: 1.75;
+
+  --tracking-display: -0.02em;
+  --tracking-meta: 0.12em;
+  --tracking-tight: -0.01em;
+
+  /* -------------------------------------------------------------------
+     4. SPACING SCALE
+     ------------------------------------------------------------------- */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.5rem;
+  --sp-6: 2rem;
+  --sp-7: 3rem;
+  --sp-8: 4rem;
+  --sp-9: 6rem;
+  --sp-10: 8rem;
+
+  --section-gap: clamp(4rem, 3rem + 8vw, 8rem);
+
+  /* -------------------------------------------------------------------
+     5. LAYOUT
+     ------------------------------------------------------------------- */
+  --content-max: 1400px;
+  --content-narrow: 800px;
+  --content-text: 65ch;
+
+  --gutter: clamp(1.5rem, 1rem + 3vw, 4rem);
+
+  --grid-gap: clamp(1.25rem, 1rem + 1.5vw, 2.5rem);
+
+  --header-height: 80px;
+
+  /* -------------------------------------------------------------------
+     6. BORDERS, RADIUS, SHADOWS — Neo-Brutalist Style
+     ------------------------------------------------------------------- */
+  --border-width: 2px;
+  --border-width-strong: 3px;
+  --border-width-heavy: 4px;
+
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
+
+  /* Neo-brutalist shadows - offset, hard-edged */
+  --shadow-sm: 2px 2px 0 var(--border);
+  --shadow: 4px 4px 0 var(--deep-plum);
+  --shadow-lg: 8px 8px 0 var(--deep-plum);
+  --shadow-colored: 4px 4px 0 var(--marigold);
+  --shadow-colored-alt: 4px 4px 0 var(--rose);
+  --shadow-colored-mint: 4px 4px 0 var(--mint);
+  --shadow-inner: inset 2px 2px 0 var(--border);
+  --shadow-card: 4px 4px 0 var(--deep-plum), 0 0 0 2px var(--deep-plum);
+
+  /* -------------------------------------------------------------------
+     7. MOTION
+     ------------------------------------------------------------------- */
+  --dur-fast: 120ms;
+  --dur: 180ms;
+  --dur-slow: 280ms;
+  --ease: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  /* -------------------------------------------------------------------
+     8. Z-INDEX
+     ------------------------------------------------------------------- */
+  --z-base: 1;
+  --z-sticky: 50;
+  --z-header: 100;
+  --z-overlay: 200;
+  --z-skip: 300;
+  --z-modal: 400;
+  --z-toast: 500;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 1ms;
+    --dur: 1ms;
+    --dur-slow: 1ms;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --border-width: 3px;
+    --border-width-strong: 4px;
+    --shadow: 4px 4px 0 var(--deep-plum);
+    --shadow-lg: 8px 8px 0 var(--deep-plum);
+  }
+}

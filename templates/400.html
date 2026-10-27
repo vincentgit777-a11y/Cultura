@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% from 'components/icons.html' import icon %}
+
+{% block title %}Bad request · {{ site_name }}{% endblock %}
+
+{% block content %}
+
+<section class="error-page">
+  <div class="container">
+    <div class="error-page__inner">
+      <p class="error-page__code">400</p>
+      <h1 class="error-page__title">That request could not be understood</h1>
+      <p class="error-page__text">
+        The server rejected the request. This usually happens when a form was
+        submitted from a stale page, or when the address is incomplete.
+      </p>
+
+      <div class="error-page__actions">
+        <a class="btn" href="{{ url_for('index') }}">
+          Back to the homepage {{ icon('arrow-right', 18, 'btn__arrow') }}
+        </a>
+        <a class="btn btn--quiet" href="{{ url_for('events') }}">Browse the events</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

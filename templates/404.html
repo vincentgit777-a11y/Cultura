@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% from 'components/icons.html' import icon %}
+{% from 'partials/event_card.html' import event_card %}
+
+{% block title %}Page not found · {{ site_name }}{% endblock %}
+{% block meta_description %}The page you were looking for does not exist.{% endblock %}
+
+{% block content %}
+
+<section class="error-page">
+  <div class="container">
+    <div class="error-page__inner">
+      <p class="error-page__code">404</p>
+      <h1 class="error-page__title">This page does not exist</h1>
+      <p class="error-page__text">
+        The address may have been mistyped, or the page may have moved. Every
+        competition has its own permanent address, so try the programme below.
+      </p>
+
+      <div class="error-page__actions">
+        <a class="btn" href="{{ url_for('events') }}">
+          Explore the events {{ icon('arrow-right', 18, 'btn__arrow') }}
+        </a>
+        <a class="btn btn--quiet" href="{{ url_for('index') }}">Back to the homepage</a>
+      </div>
+
+      <nav class="error-page__links" aria-label="Other pages">
+        <a href="{{ url_for('index') }}">Home</a>
+        <a href="{{ url_for('events') }}">Events</a>
+        <a href="{{ url_for('schedule') }}">Schedule</a>
+        <a href="{{ url_for('about') }}">About</a>
+        <a href="{{ url_for('faq') }}">FAQ</a>
+      </nav>
+    </div>
+  </div>
+</section>
+
+{% if suggested_events %}
+<section class="section section--flush-top">
+  <div class="container">
+    <div class="section-head">
+      <span class="section-head__eyebrow u-mono">Try one of these</span>
+      <h2 class="section-head__title">Popular competitions</h2>
+    </div>
+    <div class="grid grid--events">
+      {% for event in suggested_events %}
+        {{ event_card(event) }}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}

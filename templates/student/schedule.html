@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% from 'components/icons.html' import icon %}
+
+{% block title %}My Schedule · {{ site_name }}{% endblock %}
+{% block meta_description %}Your personal Cultura festival schedule from registered events.{% endblock %}
+
+{% block content %}
+<nav class="breadcrumbs" aria-label="Breadcrumb">
+  <div class="container">
+    <ol class="breadcrumbs__list">
+      <li><a href="{{ url_for('index') }}">Home</a></li>
+      <li><a href="{{ url_for('student_dashboard') }}">Dashboard</a></li>
+      <li><span class="breadcrumbs__current" aria-current="page">My Schedule</span></li>
+    </ol>
+  </div>
+</nav>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head section-head--split">
+      <div>
+        <span class="section-head__eyebrow u-mono">Schedule</span>
+        <h2 class="section-head__title">Your personal festival schedule</h2>
+      </div>
+      <a class="link-arrow" href="{{ url_for('schedule') }}">
+        View full festival schedule {{ icon('arrow-right', 16, 'link-arrow__arrow') }}
+      </a>
+    </div>
+
+    {% if sessions %}
+      <div class="schedule-day">
+        {% for day in days %}
+          <div class="schedule-day__section">
+            <h3 class="schedule-day__title">
+              <span class="schedule-day__label">{{ day.date | pretty_date }}</span>
+              {{ day.date | pretty_date }}
+            </h3>
+            {% for session in sessions if session.date == day.date %}
+              <div class="schedule-entry">
+                <p class="schedule-entry__time">
+                  {{ session.start_time | pretty_time }}
+                  {% if session.end_time %}<span> → {{ session.end_time | pretty_time }}</span>{% endif %}
+                </p>
+                <div>
+                  <h3 class="schedule-entry__title">
+                    <a href="{{ url_for('event_detail', slug=session.slug) }}">{{ session.title }}</a>
+                  </h3>
+                  <p class="schedule-entry__meta">
+                    <span class="category-label">{{ session.category }}</span>
+                    {% if session.venue %} · {{ session.venue }}{% endif %}
+                  </p>
+                </div>
+                <a class="link-arrow schedule-entry__link"
+                   href="{{ url_for('event_detail', slug=session.slug) }}">
+                  Event details {{ icon('arrow-right', 15, 'link-arrow__arrow') }}
+                </a>
+              </div>
+            {% endfor %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <span class="empty-state__mark">{{ icon('calendar', 28) }}</span>
+        <h2 class="empty-state__title">Your schedule is empty</h2>
+        <p class="empty-state__text">
+          You haven't registered for any events with confirmed dates yet. Once you
+          register for events that have published schedules, they'll appear here
+          automatically.
+        </p>
+        <div class="empty-state__actions">
+          <a class="btn btn--primary" href="{{ url_for('events') }}">
+            Register for events {{ icon('arrow-right', 18, 'btn__arrow') }}
+          </a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+{% from 'components/icons.html' import icon %}
+
+{% block title %}Dashboard · {{ site_name }}{% endblock %}
+{% block meta_description %}Your Cultura dashboard - manage registrations, teams, and schedule.{% endblock %}
+
+{% block content %}
+<nav class="breadcrumbs" aria-label="Breadcrumb">
+  <div class="container">
+    <ol class="breadcrumbs__list">
+      <li><a href="{{ url_for('index') }}">Home</a></li>
+      <li><span class="breadcrumbs__current" aria-current="page">Dashboard</span></li>
+    </ol>
+  </div>
+</nav>
+
+<section class="section section--tight">
+  <div class="container">
+    <header class="dashboard-header">
+      <div>
+        <p class="dashboard-greeting">Welcome back, <strong>{{ current_user.full_name }}</strong>!</p>
+        <p class="dashboard-subtitle">Here's what's happening with your Cultura participation.</p>
+      </div>
+      <a class="btn btn--primary" href="{{ url_for('events') }}">
+        {{ icon('plus', 18) }} Explore Events
+      </a>
+    </header>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="stats-grid">
+      <article class="stat-card">
+        <span class="stat-card__icon">{{ icon('ticket', 24) }}</span>
+        <div class="stat-card__content">
+          <p class="stat-card__value">{{ registration_count }}</p>
+          <p class="stat-card__label">Registrations</p>
+        </div>
+        <a class="stat-card__link" href="{{ url_for('my_registrations') }}">
+          View all {{ icon('arrow-right', 16) }}
+        </a>
+      </article>
+
+      <article class="stat-card">
+        <span class="stat-card__icon">{{ icon('users', 24) }}</span>
+        <div class="stat-card__content">
+          <p class="stat-card__value">{{ team_count }}</p>
+          <p class="stat-card__label">Teams</p>
+        </div>
+        <a class="stat-card__link" href="{{ url_for('my_teams') }}">
+          View all {{ icon('arrow-right', 16) }}
+        </a>
+      </article>
+
+      <article class="stat-card">
+        <span class="stat-card__icon">{{ icon('calendar', 24) }}</span>
+        <div class="stat-card__content">
+          <p class="stat-card__value">{{ upcoming_events|length }}</p>
+          <p class="stat-card__label">Upcoming Events</p>
+        </div>
+        <a class="stat-card__link" href="{{ url_for('my_schedule') }}">
+          View schedule {{ icon('arrow-right', 16) }}
+        </a>
+      </article>
+    </div>
+  </div>
+</section>
+
+{% if recent_registrations %}
+<section class="section">
+  <div class="container">
+    <div class="section-head section-head--split">
+      <div>
+        <span class="section-head__eyebrow u-mono">Recent Activity</span>
+        <h2 class="section-head__title">Your latest registrations</h2>
+      </div>
+      <a class="link-arrow" href="{{ url_for('my_registrations') }}">
+        View all {{ icon('arrow-right', 16, 'link-arrow__arrow') }}
+      </a>
+    </div>
+
+    <div class="grid grid--events">
+      {% for reg in recent_registrations %}
+        <div class="event-result">
+          <article class="event-card">
+            <div class="event-card__top">
+              <span class="category-label">{{ reg.category }}</span>
+            </div>
+            <h3 class="event-card__title">
+              <a href="{{ url_for('event_detail', slug=reg.event_slug) }}">{{ reg.event_title }}</a>
+            </h3>
+            <ul class="event-card__meta">
+              {% if reg.participant.entry_type == 'team' %}
+                <li>{{ icon('users', 14) }} Team: {{ reg.participant.team_name }}</li>
+              {% else %}
+                <li>{{ icon('user', 14) }} Individual entry</li>
+              {% endif %}
+              <li>{{ icon('calendar', 14) }} Registered {{ reg.created_at[:10] | pretty_date }}</li>
+            </ul>
+            <div class="event-card__footer">
+              <span class="status-badge status-badge--{{ 'open' if reg.status == 'confirmed' else 'closed' }}">
+                {{ reg.status | capitalize }}
+              </span>
+              <a class="link-arrow" href="{{ url_for('event_detail', slug=reg.event_slug) }}">
+                Details {{ icon('arrow-right', 15, 'link-arrow__arrow') }}
+              </a>
+            </div>
+          </article>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% if teams %}
+<section class="section section--ruled">
+  <div class="container">
+    <div class="section-head section-head--split">
+      <div>
+        <span class="section-head__eyebrow u-mono">Your Teams</span>
+        <h2 class="section-head__title">Team memberships</h2>
+      </div>
+      <a class="link-arrow" href="{{ url_for('my_teams') }}">
+        Manage teams {{ icon('arrow-right', 16, 'link-arrow__arrow') }}
+      </a>
+    </div>
+
+    <div class="teams-list">
+      {% for team in teams %}
+        <article class="team-card">
+          <div class="team-card__info">
+            <h3 class="team-card__name">{{ team.name }}</h3>
+            <p class="team-card__competition">{{ team.competition_slug | replace('-', ' ') | title }}</p>
+          </div>
+          <div class="team-card__meta">
+            <span class="team-card__status {% if team.status == 'registered' %}status-badge status-badge--open{% else %}status-badge status-badge--closed{% endif %}">
+              {{ team.status | capitalize }}
+            </span>
+            <span class="team-card__size">{{ team.member_ids|length }} / {{ team.max_size }} members</span>
+            {% if team.captain_id == current_user.id %}
+              <span class="tag tag--primary">Captain</span>
+            {% endif %}
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% if upcoming_events %}
+<section class="section">
+  <div class="container">
+    <div class="section-head section-head--split">
+      <div>
+        <span class="section-head__eyebrow u-mono">Upcoming</span>
+        <h2 class="section-head__title">Events you might like</h2>
+      </div>
+      <a class="link-arrow" href="{{ url_for('events') }}">
+        Browse all {{ icon('arrow-right', 16, 'link-arrow__arrow') }}
+      </a>
+    </div>
+
+    <div class="grid grid--events">
+      {% for event in upcoming_events %}
+        <div class="event-result">
+          {{ event_card(event) }}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}

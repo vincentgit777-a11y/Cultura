@@ -1,0 +1,322 @@
+{% extends 'base.html' %}
+{% from 'components/icons.html' import icon %}
+
+{% block title %}Register · {{ event.title }} · {{ site_name }}{% endblock %}
+{% block meta_description %}Register for {{ event.title }} at {{ site_name }}.{% endblock %}
+
+{% block content %}
+
+<nav class="breadcrumbs" aria-label="Breadcrumb">
+  <div class="container">
+    <ol class="breadcrumbs__list">
+      <li><a href="{{ url_for('index') }}">Home</a></li>
+      <li><a href="{{ url_for('events') }}">Events</a></li>
+      <li><a href="{{ url_for('event_detail', slug=event.slug) }}">{{ event.title }}</a></li>
+      <li><span class="breadcrumbs__current" aria-current="page">Register</span></li>
+    </ol>
+  </div>
+</nav>
+
+<div class="container register-layout">
+
+  {# ======================================================================
+      FORM
+      ====================================================================== #}
+  <div class="register-layout__main">
+
+    <span class="page-head__eyebrow">Registration</span>
+    <h1 class="page-head__title" style="max-width: 18ch">Register for {{ event.title }}</h1>
+
+    {% if event.registration_status != 'open' %}
+      <div class="notice notice--warning" style="margin-bottom: var(--sp-6)">
+        {{ icon('info', 20) }}
+        <p>
+          <strong>This competition is closed for registration.</strong>
+          The registration form below is disabled. Have a look at the
+          <a href="{{ url_for('event_detail', slug=event.slug) }}">event page</a>
+          for the full details.
+        </p>
+      </div>
+    {% endif %}
+
+    {# --- Event summary strip --- #}
+    <div class="register-event">
+      <span class="category-label">{{ event.category }}</span>
+      <h2 class="register-event__title">{{ event.title }}</h2>
+      <ul class="register-event__meta">
+        <li>
+          {% if event.date %}
+            {{ icon('calendar', 14) }} {{ event.date | pretty_date }}
+          {% else %}
+            {{ icon('calendar', 14) }} <span class="tbc">Date to be confirmed</span>
+          {% endif %}
+        </li>
+        {% if event.venue %}
+          <li>{{ icon('pin', 14) }} {{ event.venue }}</li>
+        {% endif %}
+        <li>
+          {{ icon('users', 14) }}
+          {% if event.participation_type == 'individual' %}
+            Individual entry
+          {% elif event.participation_type == 'team' %}
+            Team of {{ event.min_team_size }}–{{ event.max_team_size }}
+          {% else %}
+            Individual or team
+          {% endif %}
+        </li>
+      </ul>
+      {% if event.eligibility %}
+        <p class="form-note" style="margin-top: var(--sp-4)">
+          <strong>Eligibility:</strong> {{ event.eligibility }}
+        </p>
+      {% endif %}
+    </div>
+
+    {# --- The form --- #}
+    <form class="form" method="post" action="{{ url_for('register', slug=event.slug) }}" novalidate>
+
+      <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token }}">
+
+      {# --- Participant information --- #}
+      <fieldset class="form-section" style="border: 1px solid var(--border);">
+        <legend class="u-visually-hidden">Participant information</legend>
+        <h2 class="form-section__title">Participant information</h2>
+        <p class="form-section__hint">
+          We only ask for what the organiser needs in order to run this competition.
+        </p>
+
+        <div class="field">
+          <label class="field__label" for="full_name">
+            Full name <span class="req" aria-hidden="true">*</span>
+          </label>
+          <input class="field__control" type="text" id="full_name" name="full_name"
+                 required autocomplete="name" maxlength="100"
+                 value="{{ form_data.get('full_name', '') }}"
+                 {% if errors.get('full_name') %}aria-invalid="true" aria-describedby="full_name-error"{% endif %}>
+          {% if errors.get('full_name') %}
+            <p class="field__error" id="full_name-error">{{ errors['full_name'] }}</p>
+          {% endif %}
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="email">
+            Email address <span class="req" aria-hidden="true">*</span>
+          </label>
+          <input class="field__control" type="email" id="email" name="email"
+                 required autocomplete="email" maxlength="120"
+                 value="{{ form_data.get('email', '') }}"
+                 {% if errors.get('email') %}aria-invalid="true" aria-describedby="email-error"{% endif %}>
+          <span class="field__hint">Used by the organisers to contact you about this event.</span>
+          {% if errors.get('email') %}
+            <p class="field__error" id="email-error">{{ errors['email'] }}</p>
+          {% endif %}
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="institution">College or institution</label>
+          <input class="field__control" type="text" id="institution" name="institution"
+                 autocomplete="organization" maxlength="120"
+                 value="{{ form_data.get('institution', '') }}"
+                 {% if errors.get('institution') %}aria-invalid="true" aria-describedby="institution-error"{% endif %}>
+          <span class="field__hint">Leave empty if you are already a student here.</span>
+          {% if errors.get('institution') %}
+            <p class="field__error" id="institution-error">{{ errors['institution'] }}</p>
+          {% endif %}
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="field__label" for="department">
+              Department <span class="req" aria-hidden="true">*</span>
+            </label>
+            <select class="field__control" id="department" name="department" required
+                    {% if errors.get('department') %}aria-invalid="true" aria-describedby="department-error"{% endif %}>
+              <option value="">Select a department</option>
+              {% for department in departments %}
+                <option value="{{ department }}"
+                  {% if form_data.get('department') == department %}selected{% endif %}>
+                  {{ department }}
+                </option>
+              {% endfor %}
+            </select>
+            {% if errors.get('department') %}
+              <p class="field__error" id="department-error">{{ errors['department'] }}</p>
+            {% endif %}
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="academic_year">
+              Year of study <span class="req" aria-hidden="true">*</span>
+            </label>
+            <select class="field__control" id="academic_year" name="academic_year" required
+                    {% if errors.get('academic_year') %}aria-invalid="true" aria-describedby="academic_year-error"{% endif %}>
+              <option value="">Select a year</option>
+              {% for year in academic_years %}
+                <option value="{{ year }}"
+                  {% if form_data.get('academic_year') == year %}selected{% endif %}>
+                  {{ year }}
+                </option>
+              {% endfor %}
+            </select>
+            {% if errors.get('academic_year') %}
+              <p class="field__error" id="academic_year-error">{{ errors['academic_year'] }}</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="phone">Phone number</label>
+          <input class="field__control" type="tel" id="phone" name="phone"
+                 autocomplete="tel" maxlength="18"
+                 value="{{ form_data.get('phone', '') }}"
+                 {% if errors.get('phone') %}aria-invalid="true" aria-describedby="phone-error"{% endif %}>
+          <span class="field__hint">Optional. Only needed if the organisers need to reach you on the day.</span>
+          {% if errors.get('phone') %}
+            <p class="field__error" id="phone-error">{{ errors['phone'] }}</p>
+          {% endif %}
+        </div>
+      </fieldset>
+
+      {# --- Event specific information --- #}
+      <fieldset class="form-section" style="border: 1px solid var(--border);">
+        <legend class="u-visually-hidden">Event specific information</legend>
+        <h2 class="form-section__title">{{ event.title }} specifics</h2>
+        <p class="form-section__hint">
+          {% if event.participation_type == 'individual' %}
+            This competition is entered individually, so there is nothing team-related to fill in.
+          {% else %}
+            Tell us how you are entering this competition.
+          {% endif %}
+        </p>
+
+        {% if event.participation_type != 'individual' %}
+          <div class="field">
+            <span class="field__label" id="entry-type-label">Entry type</span>
+            <div class="choice-group" role="radiogroup" aria-labelledby="entry-type-label">
+              <label class="choice">
+                <input type="radio" name="entry_type" value="individual"
+                       {% if form_data.get('entry_type', 'individual') == 'individual' %}checked{% endif %}>
+                <span class="choice__dot" aria-hidden="true"></span>
+                <span>
+                  <span class="choice__label">Individual</span>
+                  <span class="choice__hint">I am entering on my own</span>
+                </span>
+              </label>
+
+              <label class="choice">
+                <input type="radio" name="entry_type" value="team"
+                       {% if form_data.get('entry_type') == 'team' %}checked{% endif %}>
+                <span class="choice__dot" aria-hidden="true"></span>
+                <span>
+                  <span class="choice__label">Team</span>
+                  <span class="choice__hint">
+                    {{ event.min_team_size }} to {{ event.max_team_size }} members
+                  </span>
+                </span>
+              </label>
+            </div>
+            {% if errors.get('entry_type') %}
+              <p class="field__error">{{ errors['entry_type'] }}</p>
+            {% endif %}
+          </div>
+
+          <div data-team-fields hidden>
+            <div class="field">
+              <label class="field__label" for="team_name">Team name</label>
+              <input class="field__control" type="text" id="team_name" name="team_name"
+                     maxlength="80" placeholder="e.g. Night Shift"
+                     value="{{ form_data.get('team_name', '') }}"
+                     {% if errors.get('team_name') %}aria-invalid="true" aria-describedby="team_name-error"{% endif %}>
+              {% if errors.get('team_name') %}
+                <p class="field__error" id="team_name-error">{{ errors['team_name'] }}</p>
+              {% endif %}
+            </div>
+
+            <div class="field">
+              <span class="field__label">Team members</span>
+              <span class="field__hint">
+                List every member, including yourself. This competition allows
+                {{ event.min_team_size }} to {{ event.max_team_size }} members.
+              </span>
+              <div class="member-list" style="margin-top: var(--sp-3)">
+                {% for index in range(event.max_team_size) %}
+                  <div class="member-list__row">
+                    <span class="member-list__number" aria-hidden="true">{{ index + 1 }}</span>
+                    <label class="u-visually-hidden" for="member_{{ index }}">
+                      Team member {{ index + 1 }} name
+                    </label>
+                    <input class="field__control" type="text" id="member_{{ index }}"
+                           name="team_members" maxlength="80"
+                           placeholder="Member {{ index + 1 }} full name"
+                           value="{{ form_data.get('team_members', [])[index] if form_data.get('team_members', [])|length > index else '' }}">
+                  </div>
+                {% endfor %}
+              </div>
+              {% if errors.get('team_members') %}
+                <p class="field__error">{{ errors['team_members'] }}</p>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+
+        <div class="field">
+          <label class="field__label" for="notes">Anything the organisers should know?</label>
+          <textarea class="field__control" id="notes" name="notes" rows="4" maxlength="600"
+                    placeholder="Accessibility needs, an unusual team name, or a question you would like answered.">{{ form_data.get('notes', '') }}</textarea>
+          <span class="field__hint">Optional.</span>
+        </div>
+      </fieldset>
+
+      {# --- Submit --- #}
+      <div class="form-actions">
+        <button class="btn" type="submit"
+                {% if event.registration_status != 'open' %}disabled{% endif %}>
+          Confirm registration {{ icon('arrow-right', 18, 'btn__arrow') }}
+        </button>
+        <a class="btn btn--quiet" href="{{ url_for('event_detail', slug=event.slug) }}">
+          Back to the event
+        </a>
+      </div>
+
+      <p class="form-note">
+        {{ icon('info', 15) }}
+        Your registration is stored in a local JSON file on the machine running this
+        website. It is not sent to a college server, no confirmation email is sent,
+        and the record may not survive a restart of the application.
+      </p>
+    </form>
+  </div>
+
+  {# ======================================================================
+      ASIDE — rules recap
+      ====================================================================== #}
+  <aside class="register-layout__aside">
+    <div class="summary-panel">
+      <div class="summary-panel__head">
+        <h2>Before you register</h2>
+      </div>
+      <div class="summary-panel__body">
+        {% if event.rules %}
+          <ol class="numbered-list">
+            {% for rule in event.rules[:4] %}
+              <li class="numbered-list__item">
+                <div class="numbered-list__body">{{ rule }}</div>
+              </li>
+            {% endfor %}
+          </ol>
+        {% endif %}
+
+        <p class="form-note" style="margin-top: var(--sp-5)">
+          <a href="{{ url_for('event_detail', slug=event.slug) }}">Read the complete rule sheet</a>
+        </p>
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/registration.js') }}" defer></script>
+{% endblock %}

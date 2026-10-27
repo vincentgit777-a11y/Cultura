@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% from 'components/icons.html' import icon %}
+
+{% block title %}Something went wrong · {{ site_name }}{% endblock %}
+
+{% block content %}
+
+<section class="error-page">
+  <div class="container">
+    <div class="error-page__inner">
+      <p class="error-page__code">500</p>
+      <h1 class="error-page__title">Something went wrong on our side</h1>
+      <p class="error-page__text">
+        {% if storage_message %}
+          The site's data files could not be read, so this page could not be built.
+          The details have been written to the server log.
+        {% else %}
+          The server hit an unexpected error while building this page. Please try
+          again — and if it keeps happening, check the terminal running the app.
+        {% endif %}
+      </p>
+
+      <div class="error-page__actions">
+        <a class="btn" href="{{ url_for('index') }}">
+          Back to the homepage {{ icon('arrow-right', 18, 'btn__arrow') }}
+        </a>
+        <a class="btn btn--quiet" href="{{ url_for('events') }}">Browse the events</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

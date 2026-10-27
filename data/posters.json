@@ -1,0 +1,27 @@
+{
+  "_readme": [
+    "CULTURA — poster designs and generated assets.",
+    "",
+    "Posters are created by admins for events/competitions and can be downloaded.",
+    "",
+    "Field reference:",
+    "  id                unique identifier (pst_XXXX)",
+    "  event_type        'event' | 'competition' | 'festival'",
+    "  event_slug        slug of associated event/competition (optional)",
+    "  title             poster title",
+    "  subtitle          optional subtitle",
+    "  date              event date 'YYYY-MM-DD' or ''",
+    "  venue             venue string",
+    "  festival_name     festival name (from settings)",
+    "  festival_year     festival year (e.g., '2026')",
+    "  tagline           festival tagline",
+    "  theme_colors      array of hex colors for the design",
+    "  background_image  path to background image or ''",
+    "  logo_path         path to logo image or ''",
+    "  generated_image   path to generated poster image (static/images/posters/)",
+    "  created_by        admin user ID",
+    "  created_at        ISO 8601 timestamp",
+    "  updated_at        ISO 8601 timestamp"
+  ],
+  "posters": []
+}

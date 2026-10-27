@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ page_title }} · {{ site_name }}{% endblock %}</title>
+
+  <meta name="description" content="{% block meta_description %}{{ site_name }} — {{ site.descriptor }}. Discover the programme and register for a competition.{% endblock %}">
+  <meta name="theme-color" content="#F8F4EA">
+  <meta name="color-scheme" content="light">
+
+  {# Open Graph — generic values only, no invented event facts. #}
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="{{ site_name }}">
+  <meta property="og:title" content="{{ page_title }} · {{ site_name }}">
+  <meta property="og:description" content="{{ meta_description | default(site.descriptor) }}">
+  <meta property="og:url" content="{{ request.url_root }}">
+
+  <link rel="icon" href="{{ url_for('static', filename='images/brand/favicon.svg') }}" type="image/svg+xml">
+
+  {# Fonts are loaded from a reliable CDN with full system fallbacks, so the
+     site still reads correctly when the network is unavailable. #}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+</head>
+<body>
+  <a class="site-skip" href="#main">Skip to main content</a>
+
+  {% include 'partials/header.html' %}
+
+  <main id="main">
+    {% include 'partials/flash.html' %}
+    {% block content %}{% endblock %}
+  </main>
+
+  {% include 'partials/footer.html' %}
+
+  <button class="to-top" id="to-top" type="button" aria-label="Back to top">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M12 20V5"/><path d="m6 11 6-6 6 6"/>
+    </svg>
+  </button>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

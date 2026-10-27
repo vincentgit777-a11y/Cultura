@@ -1,0 +1,82 @@
+{
+  "_readme": [
+    "TECHNOVANA — site settings.",
+    "",
+    "Any value that is an empty string is treated as 'not yet supplied'.",
+    "The templates render a clear 'To be confirmed' state for those fields",
+    "instead of inventing information.",
+    "",
+    "Fill in `event_date`, `venue`, `city` and `contact_email` once the real",
+    "details are confirmed — the hero, footer, schedule and every event page",
+    "update automatically."
+  ],
+  "site": {
+    "name": "Technovana",
+    "descriptor": "Student technology festival",
+    "tagline": "Build what comes next.",
+    "hero_headline": "BUILD WHAT COMES NEXT.",
+    "hero_description": "A student technology festival for people who would rather build the answer than watch for it — competitions, workshops and conversations across software, design, AI, gaming and everything in between.",
+    "about_title": "Technovana is a student technology festival.",
+    "about_body": "Technovana is organised for students, by students. It exists to give everyone on campus a place to test an idea in front of other people: to write the code that fails, to defend the design decision, to run the numbers and to lose an argument well. The programme is built around working sessions rather than keynote theatre, so the people presenting are the people who built the thing.",
+    "principles": [
+      {
+        "title": "Build in the open",
+        "text": "Every session is a working session. Bring the half-finished version."
+      },
+      {
+        "title": "Judged on craft",
+        "text": "A published rubric for every competition, so the result is never a matter of taste."
+      },
+      {
+        "title": "Open to everyone",
+        "text": "Events are grouped by discipline, not by year of study or department."
+      }
+    ],
+    "event_date": "",
+    "event_dates_label": "",
+    "venue": "",
+    "city": "",
+    "contact_email": "",
+    "registration_open": true,
+    "social": {
+      "instagram": "",
+      "github": "",
+      "linkedin": ""
+    },
+    "privacy_note": "Registrations submitted through this site are stored in a local JSON file on the machine running the application. Nothing is sent to a third-party service, and no tracking or advertising scripts are used."
+  },
+  "faq": [
+    {
+      "question": "Who can take part in Technovana?",
+      "answer": "Every competition lists its own eligibility on the event page. Unless an event states otherwise, entries are open to all students of the participating institution, and the team size shown on the event page is the only limit that applies."
+    },
+    {
+      "question": "How does registration work?",
+      "answer": "Registration is a short form on each event page. You submit it once, and the site returns a confirmation with a reference number that you can quote at the venue desk. The reference is generated locally by this application — see the note below about local storage."
+    },
+    {
+      "question": "Where are my registration records stored?",
+      "answer": "In a JSON file on the machine running this application. They do not synchronise between different computers, and they may not survive a redeploy if the host uses an ephemeral filesystem. The application states this plainly rather than implying a shared, permanent system."
+    },
+    {
+      "question": "Is there a fee, and are there refunds?",
+      "answer": "This has not been confirmed yet. Entry requirements and any refund policy will be published by the organisers as soon as they are finalised. Until then, please contact the organisers directly rather than assuming an answer."
+    },
+    {
+      "question": "Do participants receive certificates?",
+      "answer": "Certificates have not been confirmed for every event. Where an event guarantees participation recognition, that is stated on the event page. For anything else, please check with the organisers."
+    },
+    {
+      "question": "Can I change or cancel a registration?",
+      "answer": "Contact the organisers using the channel published on the site. Because registrations are stored locally in this prototype, the organisers may need to amend the record manually."
+    },
+    {
+      "question": "What should I bring to an event?",
+      "answer": "Each event page lists what you need — for example a laptop with a specific toolchain, or a phone charged to a published level. If an event needs something specific, it is stated on that event's page."
+    },
+    {
+      "question": "How do I get in touch?",
+      "answer": "The organiser contact channel has not been published yet. Once it is confirmed it appears in the footer and on this page, and you can reach the team directly with questions about a specific event."
+    }
+  ]
+}

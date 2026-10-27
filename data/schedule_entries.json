@@ -1,0 +1,25 @@
+{
+  "_readme": [
+    "CULTURA — festival schedule entries.",
+    "",
+    "Explicit schedule entries for the public festival timetable.",
+    "These are separate from events/competitions and can be published independently.",
+    "",
+    "Field reference:",
+    "  id                unique identifier (sch_XXXX)",
+    "  title             session title",
+    "  description       optional description",
+    "  event_type        'competition' | 'workshop' | 'ceremony' | 'break' | 'other'",
+    "  event_slug        slug of associated event/competition (optional)",
+    "  competition_slug  slug of associated competition (optional)",
+    "  date              'YYYY-MM-DD'",
+    "  start_time        'HH:MM'",
+    "  end_time          'HH:MM'",
+    "  venue             venue name",
+    "  venue_details     optional room/floor details",
+    "  is_published      boolean, visible on public schedule",
+    "  created_at        ISO 8601 timestamp",
+    "  updated_at        ISO 8601 timestamp"
+  ],
+  "schedule_entries": []
+}
