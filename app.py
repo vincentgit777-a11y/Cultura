@@ -1674,15 +1674,6 @@ def create_app(config_object=Config):
             return not_found("Competition")
         return success({"competition": comp})
 
-    @app.route("/api/admin/registrations", methods=["GET"])
-    @api_admin_required
-    def api_admin_registrations_list():
-        """List all registrations."""
-        from lib.responses import success
-
-        registrations = load_registrations()
-        return success({"registrations": registrations})
-
     @app.route("/api/admin/teams", methods=["GET"])
     @api_admin_required
     def api_admin_teams_list():
@@ -1691,6 +1682,755 @@ def create_app(config_object=Config):
 
         teams = load_teams()
         return success({"teams": teams})
+
+    @app.route("/api/admin/teams/<team_id>", methods=["GET"])
+    @api_admin_required
+    def api_admin_teams_get(team_id):
+        """Get single team with full details."""
+        from lib.responses import success, not_found
+
+        team = find_team_by_id(team_id)
+        if not team:
+            return not_found("Team")
+
+        users = load_users()
+        user_by_id = {u["id"]: u for u in users}
+
+        team["members"] = []
+        for member_id in team.get("member_ids", []):
+            member = user_by_id.get(member_id)
+            if member:
+                team["members"].append({
+                    "id": member["id"],
+                    "full_name": member.get("full_name", "Unknown"),
+                    "email": member.get("email", "")
+                })
+            else:
+                team["members"].append({
+                    "id": member_id,
+                    "full_name": "Unknown user",
+                    "email": ""
+                })
+        captain = user_by_id.get(team.get("captain_id"))
+        team["captain"] = captain if captain else {"id": team.get("captain_id"), "full_name": "Unknown"}
+
+        # Add competition details
+        comp = find_competition(team.get("competition_slug", ""))
+        if comp:
+            team["competition"] = comp
+
+        return success({"team": team})
+
+    @app.route("/api/admin/registrations", methods=["GET"])
+    @api_admin_required
+    def api_admin_registrations_list():
+        """List all registrations with optional filters."""
+        from lib.responses import success
+
+        registrations = load_registrations()
+
+        # Optional filters
+        status_filter = request.args.get("status")
+        event_slug = request.args.get("event_slug")
+        email = request.args.get("email")
+        date_from = request.args.get("date_from")
+        date_to = request.args.get("date_to")
+
+        if status_filter:
+            registrations = [r for r in registrations if r.get("status") == status_filter]
+        if event_slug:
+            registrations = [r for r in registrations if r.get("event_slug") == event_slug]
+        if email:
+            registrations = [r for r in registrations if r.get("participant", {}).get("email", "").lower() == email.lower()]
+        if date_from:
+            registrations = [r for r in registrations if r.get("created_at", "") >= date_from]
+        if date_to:
+            registrations = [r for r in registrations if r.get("created_at", "") <= date_to]
+
+        return success({"registrations": registrations})
+
+    @app.route("/api/admin/registrations/<ref>", methods=["GET"])
+    @api_admin_required
+    def api_admin_registrations_get(ref):
+        """Get single registration."""
+        from lib.responses import success, not_found
+
+        registration = next((r for r in load_registrations() if r.get("reference") == ref), None)
+        if not registration:
+            return not_found("Registration")
+        return success({"registration": registration})
+
+    @app.route("/api/admin/registrations/<ref>", methods=["PATCH"])
+    @api_admin_required
+    def api_admin_registrations_update(ref):
+        """Update registration status."""
+        from lib.responses import success, validation_error, not_found
+
+        if not request.is_json:
+            return validation_error({"_form": "JSON body required"})
+
+        registration = next((r for r in load_registrations() if r.get("reference") == ref), None)
+        if not registration:
+            return not_found("Registration")
+
+        data = request.get_json()
+        new_status = data.get("status")
+        valid_statuses = ("pending", "confirmed", "rejected", "cancelled", "waitlisted")
+
+        if new_status not in valid_statuses:
+            return validation_error({"status": f"Invalid status. Must be one of: {', '.join(valid_statuses)}"})
+
+        # Validate status transition
+        current = registration.get("status", "pending")
+        valid_transitions = {
+            "pending": ("confirmed", "rejected", "cancelled"),
+            "confirmed": ("cancelled", "rejected"),
+            "rejected": ("pending",),
+            "cancelled": ("pending",),
+            "waitlisted": ("confirmed", "rejected", "cancelled"),
+        }
+
+        if new_status != current and new_status not in valid_transitions.get(current, ()):
+            return validation_error({"status": f"Cannot transition from {current} to {new_status}"})
+
+        def update(current):
+            regs = current if isinstance(current, list) else []
+            for r in regs:
+                if r.get("reference") == ref:
+                    r["status"] = new_status
+                    r["updated_at"] = datetime.now().isoformat(timespec="seconds")
+            return regs
+
+        update_json(app.config["REGISTRATIONS_FILE"], [], update)
+
+        return success({"registration": registration}, message=f"Status updated to {new_status}")
+
+    @app.route("/api/admin/schedule", methods=["GET"])
+    @api_admin_required
+    def api_admin_schedule_list():
+        """List schedule entries with optional filters."""
+        from lib.responses import success
+
+        entries = load_schedule_entries()
+
+        # Optional filters
+        date_filter = request.args.get("date")
+        venue_filter = request.args.get("venue")
+        event_type_filter = request.args.get("event_type")
+        published_filter = request.args.get("is_published")
+
+        if date_filter:
+            entries = [e for e in entries if e.get("date") == date_filter]
+        if venue_filter:
+            entries = [e for e in entries if e.get("venue") == venue_filter]
+        if event_type_filter:
+            entries = [e for e in entries if e.get("event_type") == event_type_filter]
+        if published_filter is not None:
+            is_pub = published_filter.lower() == "true"
+            entries = [e for e in entries if e.get("is_published") == is_pub]
+
+        return success({"schedule_entries": entries})
+
+    @app.route("/api/admin/schedule/<entry_id>", methods=["GET"])
+    @api_admin_required
+    def api_admin_schedule_get(entry_id):
+        """Get single schedule entry."""
+        from lib.responses import success, not_found
+
+        entry = next((e for e in load_schedule_entries() if e.get("id") == entry_id), None)
+        if not entry:
+            return not_found("Schedule entry")
+        return success({"schedule_entry": entry})
+
+    @app.route("/api/admin/schedule", methods=["POST"])
+    @api_admin_required
+    def api_admin_schedule_create():
+        """Create new schedule entry with conflict detection."""
+        from lib.responses import created, validation_error
+
+        if not request.is_json:
+            return validation_error({"_form": "JSON body required"})
+
+        data = request.get_json()
+        errors = validate_schedule_data(data)
+        if errors:
+            return validation_error(errors)
+
+        # Check for conflicts
+        conflict = check_schedule_conflict(data)
+        if conflict and not data.get("force"):
+            return validation_error({
+                "conflict": "Schedule conflict detected",
+                "details": conflict
+            }, status=409)
+
+        entry = {
+            "id": f"sch_{secrets.token_hex(6)}",
+            "title": data["title"].strip(),
+            "description": data.get("description", "").strip(),
+            "event_type": data.get("event_type", "other"),
+            "event_slug": data.get("event_slug", "").strip(),
+            "competition_slug": data.get("competition_slug", "").strip(),
+            "date": data["date"].strip(),
+            "start_time": data["start_time"].strip(),
+            "end_time": data["end_time"].strip(),
+            "venue": data["venue"].strip(),
+            "venue_details": data.get("venue_details", "").strip(),
+            "is_published": data.get("is_published", False),
+            "created_at": datetime.now().isoformat(timespec="seconds"),
+            "updated_at": datetime.now().isoformat(timespec="seconds"),
+        }
+
+        def upsert(current):
+            entries_data = current if isinstance(current, dict) else {"schedule_entries": []}
+            entries_list = entries_data.get("schedule_entries", [])
+            if not isinstance(entries_list, list):
+                entries_list = []
+            entries_list.append(entry)
+            return {"schedule_entries": entries_list}
+
+        update_json(app.config["SCHEDULE_ENTRIES_FILE"], {"schedule_entries": []}, upsert)
+
+        return created({"schedule_entry": entry}, message="Schedule entry created successfully")
+
+    @app.route("/api/admin/schedule/<entry_id>", methods=["PUT"])
+    @api_admin_required
+    def api_admin_schedule_update(entry_id):
+        """Update schedule entry with conflict detection."""
+        from lib.responses import success, validation_error, not_found
+
+        if not request.is_json:
+            return validation_error({"_form": "JSON body required"})
+
+        entry = next((e for e in load_schedule_entries() if e.get("id") == entry_id), None)
+        if not entry:
+            return not_found("Schedule entry")
+
+        data = request.get_json()
+        errors = validate_schedule_data(data, existing_id=entry_id)
+        if errors:
+            return validation_error(errors)
+
+        # Check for conflicts (excluding self)
+        conflict = check_schedule_conflict(data, exclude_id=entry_id)
+        if conflict and not data.get("force"):
+            return validation_error({
+                "conflict": "Schedule conflict detected",
+                "details": conflict
+            }, status=409)
+
+        entry["title"] = data["title"].strip()
+        entry["description"] = data.get("description", "").strip()
+        entry["event_type"] = data.get("event_type", "other")
+        entry["event_slug"] = data.get("event_slug", "").strip()
+        entry["competition_slug"] = data.get("competition_slug", "").strip()
+        entry["date"] = data["date"].strip()
+        entry["start_time"] = data["start_time"].strip()
+        entry["end_time"] = data["end_time"].strip()
+        entry["venue"] = data["venue"].strip()
+        entry["venue_details"] = data.get("venue_details", "").strip()
+        entry["is_published"] = data.get("is_published", False)
+        entry["updated_at"] = datetime.now().isoformat(timespec="seconds")
+
+        def upsert(current):
+            entries_data = current if isinstance(current, dict) else {"schedule_entries": []}
+            entries_list = entries_data.get("schedule_entries", [])
+            if not isinstance(entries_list, list):
+                entries_list = []
+            entries_list = [e for e in entries_list if e.get("id") != entry_id]
+            entries_list.append(entry)
+            return {"schedule_entries": entries_list}
+
+        update_json(app.config["SCHEDULE_ENTRIES_FILE"], {"schedule_entries": []}, upsert)
+
+        return success({"schedule_entry": entry}, message="Schedule entry updated successfully")
+
+    @app.route("/api/admin/schedule/<entry_id>", methods=["DELETE"])
+    @api_admin_required
+    def api_admin_schedule_delete(entry_id):
+        """Delete schedule entry."""
+        from lib.responses import success, not_found
+
+        entry = next((e for e in load_schedule_entries() if e.get("id") == entry_id), None)
+        if not entry:
+            return not_found("Schedule entry")
+
+        def remove(current):
+            entries_data = current if isinstance(current, dict) else {"schedule_entries": []}
+            entries_list = entries_data.get("schedule_entries", [])
+            if not isinstance(entries_list, list):
+                entries_list = []
+            entries_list = [e for e in entries_list if e.get("id") != entry_id]
+            return {"schedule_entries": entries_list}
+
+        update_json(app.config["SCHEDULE_ENTRIES_FILE"], {"schedule_entries": []}, remove)
+
+        return success(message="Schedule entry deleted successfully")
+
+    @app.route("/api/admin/posters", methods=["GET"])
+    @api_admin_required
+    def api_admin_posters_list():
+        """List all posters."""
+        from lib.responses import success
+
+        posters = load_posters()
+        return success({"posters": posters})
+
+    @app.route("/api/admin/posters/<poster_id>", methods=["GET"])
+    @api_admin_required
+    def api_admin_posters_get(poster_id):
+        """Get single poster."""
+        from lib.responses import success, not_found
+
+        poster = find_poster(poster_id)
+        if not poster:
+            return not_found("Poster")
+        return success({"poster": poster})
+
+    @app.route("/api/admin/posters", methods=["POST"])
+    @api_admin_required
+    def api_admin_posters_create():
+        """Create new poster."""
+        from lib.responses import created, validation_error
+
+        if not request.is_json:
+            return validation_error({"_form": "JSON body required"})
+
+        data = request.get_json()
+        errors = validate_poster_data(data)
+        if errors:
+            return validation_error(errors)
+
+        poster = {
+            "id": f"pst_{secrets.token_hex(6)}",
+            "event_type": data.get("event_type", "festival"),
+            "event_slug": data.get("event_slug", "").strip(),
+            "title": data["title"].strip(),
+            "subtitle": data.get("subtitle", "").strip(),
+            "date": data.get("date", "").strip(),
+            "venue": data.get("venue", "").strip(),
+            "festival_name": data.get("festival_name", ""),
+            "festival_year": data.get("festival_year", ""),
+            "tagline": data.get("tagline", "").strip(),
+            "theme_colors": data.get("theme_colors", []),
+            "background_image": data.get("background_image", "").strip(),
+            "logo_path": data.get("logo_path", "").strip(),
+            "generated_image": "",
+            "created_by": g.api_user["user_id"],
+            "created_at": datetime.now().isoformat(timespec="seconds"),
+            "updated_at": datetime.now().isoformat(timespec="seconds"),
+        }
+
+        def upsert(current):
+            posters_data = current if isinstance(current, dict) else {"posters": []}
+            posters_list = posters_data.get("posters", [])
+            if not isinstance(posters_list, list):
+                posters_list = []
+            posters_list.append(poster)
+            return {"posters": posters_list}
+
+        update_json(app.config["POSTERS_FILE"], {"posters": []}, upsert)
+
+        return created({"poster": poster}, message="Poster created successfully")
+
+    @app.route("/api/admin/posters/<poster_id>", methods=["PUT"])
+    @api_admin_required
+    def api_admin_posters_update(poster_id):
+        """Update poster."""
+        from lib.responses import success, validation_error, not_found
+
+        if not request.is_json:
+            return validation_error({"_form": "JSON body required"})
+
+        poster = find_poster(poster_id)
+        if not poster:
+            return not_found("Poster")
+
+        data = request.get_json()
+        errors = validate_poster_data(data, existing_id=poster_id)
+        if errors:
+            return validation_error(errors)
+
+        poster["event_type"] = data.get("event_type", "festival")
+        poster["event_slug"] = data.get("event_slug", "").strip()
+        poster["title"] = data["title"].strip()
+        poster["subtitle"] = data.get("subtitle", "").strip()
+        poster["date"] = data.get("date", "").strip()
+        poster["venue"] = data.get("venue", "").strip()
+        poster["festival_name"] = data.get("festival_name", "")
+        poster["festival_year"] = data.get("festival_year", "")
+        poster["tagline"] = data.get("tagline", "").strip()
+        poster["theme_colors"] = data.get("theme_colors", [])
+        poster["background_image"] = data.get("background_image", "").strip()
+        poster["logo_path"] = data.get("logo_path", "").strip()
+        poster["updated_at"] = datetime.now().isoformat(timespec="seconds")
+
+        def upsert(current):
+            posters_data = current if isinstance(current, dict) else {"posters": []}
+            posters_list = posters_data.get("posters", [])
+            if not isinstance(posters_list, list):
+                posters_list = []
+            posters_list = [p for p in posters_list if p.get("id") != poster_id]
+            posters_list.append(poster)
+            return {"posters": posters_list}
+
+        update_json(app.config["POSTERS_FILE"], {"posters": []}, upsert)
+
+        return success({"poster": poster}, message="Poster updated successfully")
+
+    @app.route("/api/admin/posters/<poster_id>", methods=["DELETE"])
+    @api_admin_required
+    def api_admin_posters_delete(poster_id):
+        """Delete poster."""
+        from lib.responses import success, not_found
+
+        poster = find_poster(poster_id)
+        if not poster:
+            return not_found("Poster")
+
+        def remove(current):
+            posters_data = current if isinstance(current, dict) else {"posters": []}
+            posters_list = posters_data.get("posters", [])
+            if not isinstance(posters_list, list):
+                posters_list = []
+            posters_list = [p for p in posters_list if p.get("id") != poster_id]
+            return {"posters": posters_list}
+
+        update_json(app.config["POSTERS_FILE"], {"posters": []}, remove)
+
+        return success(message="Poster deleted successfully")
+
+    @app.route("/api/admin/settings", methods=["GET"])
+    @api_admin_required
+    def api_admin_settings_get():
+        """Get festival settings."""
+        from lib.responses import success
+
+        settings = load_settings()
+        faq = load_faq()
+        return success({"site": settings, "faq": faq})
+
+    @app.route("/api/admin/settings", methods=["PUT"])
+    @api_admin_required
+    def api_admin_settings_update():
+        """Update festival settings."""
+        from lib.responses import success, validation_error
+
+        if not request.is_json:
+            return validation_error({"_form": "JSON body required"})
+
+        data = request.get_json()
+        errors = validate_settings_data(data)
+        if errors:
+            return validation_error(errors)
+
+        def upsert(current):
+            data_dict = current if isinstance(current, dict) else {}
+            data_dict["site"] = data.get("site", {})
+            data_dict["faq"] = data.get("faq", [])
+            return data_dict
+
+        update_json(app.config["SETTINGS_FILE"], {}, upsert)
+
+        return success({"site": data.get("site", {}), "faq": data.get("faq", [])}, message="Settings updated successfully")
+
+    @app.route("/api/admin/events", methods=["PUT"])
+    @api_admin_required
+    def api_admin_events_update(slug):
+        """Update existing event."""
+        from lib.responses import success, validation_error, not_found
+
+        if not request.is_json:
+            return validation_error({"_form": "JSON body required"})
+
+        event = find_event(slug)
+        if not event:
+            return not_found("Event")
+
+        data = request.get_json()
+        errors = validate_event_data(data, existing_slug=slug)
+        if errors:
+            return validation_error(errors)
+
+        # Update fields
+        event["title"] = data["title"].strip()
+        event["category"] = data["category"].strip()
+        event["short_description"] = data.get("short_description", "").strip()
+        event["description"] = data.get("description", "").strip()
+        event["date"] = data.get("date", "").strip()
+        event["start_time"] = data.get("start_time", "").strip()
+        event["end_time"] = data.get("end_time", "").strip()
+        event["venue"] = data.get("venue", "").strip()
+        event["eligibility"] = data.get("eligibility", "").strip()
+        event["team_requirements"] = data.get("team_requirements", "").strip()
+        event["rules"] = data.get("rules", [])
+        event["highlights"] = data.get("highlights", [])
+        event["milestones"] = data.get("milestones", [])
+        event["prizes"] = data.get("prizes", {"first": "", "second": "", "third": "", "participation": ""})
+        event["faq"] = data.get("faq", [])
+        event["registration_status"] = data.get("registration_status", "open")
+        event["capacity"] = data.get("capacity")
+        event["image"] = data.get("image", "").strip()
+        event["min_team_size"] = max(1, int(data.get("min_team_size", 1)))
+        event["max_team_size"] = max(event["min_team_size"], int(data.get("max_team_size", 1)))
+        event["participation_type"] = data.get("participation_type", "individual")
+
+        if event["participation_type"] not in ("individual", "team", "both"):
+            event["participation_type"] = "individual"
+
+        if event["capacity"] is not None:
+            try:
+                event["capacity"] = int(event["capacity"])
+            except (TypeError, ValueError):
+                event["capacity"] = None
+
+        def upsert(current):
+            events_data = current if isinstance(current, dict) else {"events": []}
+            events_list = events_data.get("events", [])
+            if not isinstance(events_list, list):
+                events_list = []
+            events_list = [e for e in events_list if e.get("slug") != slug]
+            events_list.append(event)
+            return {"events": events_list}
+
+        update_json(app.config["EVENTS_FILE"], {"events": []}, upsert)
+
+        return success({"event": event}, message="Event updated successfully")
+
+    @app.route("/api/admin/events/<slug>", methods=["DELETE"])
+    @api_admin_required
+    def api_admin_events_delete(slug):
+        """Delete event."""
+        from lib.responses import success, not_found, conflict
+
+        event = find_event(slug)
+        if not event:
+            return not_found("Event")
+
+        # Check if event has registrations
+        registrations = load_registrations()
+        if any(r.get("event_slug") == slug for r in registrations):
+            return conflict("Cannot delete event with existing registrations", code="HAS_REGISTRATIONS")
+
+        def remove(current):
+            events_data = current if isinstance(current, dict) else {"events": []}
+            events_list = events_data.get("events", [])
+            if not isinstance(events_list, list):
+                events_list = []
+            events_list = [e for e in events_list if e.get("slug") != slug]
+            return {"events": events_list}
+
+        update_json(app.config["EVENTS_FILE"], {"events": []}, remove)
+
+        return success(message="Event deleted successfully")
+
+    @app.route("/api/admin/events/<slug>/publish", methods=["POST"])
+    @api_admin_required
+    def api_admin_events_publish(slug):
+        """Publish event."""
+        from lib.responses import success, not_found
+
+        event = find_event(slug)
+        if not event:
+            return not_found("Event")
+
+        event["registration_status"] = "open"
+
+        def upsert(current):
+            events_data = current if isinstance(current, dict) else {"events": []}
+            events_list = events_data.get("events", [])
+            if not isinstance(events_list, list):
+                events_list = []
+            events_list = [e for e in events_list if e.get("slug") != slug]
+            events_list.append(event)
+            return {"events": events_list}
+
+        update_json(app.config["EVENTS_FILE"], {"events": []}, upsert)
+
+        return success({"event": event}, message="Event published")
+
+    @app.route("/api/admin/events/<slug>/unpublish", methods=["POST"])
+    @api_admin_required
+    def api_admin_events_unpublish(slug):
+        """Unpublish event."""
+        from lib.responses import success, not_found
+
+        event = find_event(slug)
+        if not event:
+            return not_found("Event")
+
+        event["registration_status"] = "closed"
+
+        def upsert(current):
+            events_data = current if isinstance(current, dict) else {"events": []}
+            events_list = events_data.get("events", [])
+            if not isinstance(events_list, list):
+                events_list = []
+            events_list = [e for e in events_list if e.get("slug") != slug]
+            events_list.append(event)
+            return {"events": events_list}
+
+        update_json(app.config["EVENTS_FILE"], {"events": []}, upsert)
+
+        return success({"event": event}, message="Event unpublished")
+
+    @app.route("/api/admin/competitions", methods=["POST"])
+    @api_admin_required
+    def api_admin_competitions_create():
+        """Create new competition."""
+        from lib.responses import created, validation_error
+
+        if not request.is_json:
+            return validation_error({"_form": "JSON body required"})
+
+        data = request.get_json()
+        errors = validate_competition_data(data)
+        if errors:
+            return validation_error(errors)
+
+        # Check slug uniqueness
+        if find_competition(data["slug"]):
+            return validation_error({"slug": "A competition with this slug already exists"})
+
+        comp = {
+            "id": f"cmp_{secrets.token_hex(6)}",
+            "slug": data["slug"].strip().lower(),
+            "title": data["title"].strip(),
+            "category": data["category"].strip(),
+            "short_description": data.get("short_description", "").strip(),
+            "description": data.get("description", "").strip(),
+            "date": data.get("date", "").strip(),
+            "start_time": data.get("start_time", "").strip(),
+            "end_time": data.get("end_time", "").strip(),
+            "venue": data.get("venue", "").strip(),
+            "eligibility": data.get("eligibility", "").strip(),
+            "rules": data.get("rules", []),
+            "participation_type": data.get("participation_type", "individual"),
+            "min_team_size": max(1, int(data.get("min_team_size", 1))),
+            "max_team_size": max(int(data.get("min_team_size", 1)), int(data.get("max_team_size", 1))),
+            "registration_status": data.get("registration_status", "open"),
+            "registration_opens_at": data.get("registration_opens_at"),
+            "registration_closes_at": data.get("registration_closes_at"),
+            "capacity": data.get("capacity"),
+            "prizes": data.get("prizes", {"first": "", "second": "", "third": "", "participation": ""}),
+            "judging_criteria": data.get("judging_criteria", []),
+            "faq": data.get("faq", []),
+            "image": data.get("image", "").strip(),
+            "is_published": data.get("is_published", True),
+            "created_at": datetime.now().isoformat(timespec="seconds"),
+            "updated_at": datetime.now().isoformat(timespec="seconds"),
+        }
+
+        if comp["participation_type"] not in ("individual", "team", "both"):
+            comp["participation_type"] = "individual"
+
+        if comp["capacity"] is not None:
+            try:
+                comp["capacity"] = int(comp["capacity"])
+            except (TypeError, ValueError):
+                comp["capacity"] = None
+
+        def upsert(current):
+            comps_data = current if isinstance(current, dict) else {"competitions": []}
+            comps_list = comps_data.get("competitions", [])
+            if not isinstance(comps_list, list):
+                comps_list = []
+            comps_list.append(comp)
+            return {"competitions": comps_list}
+
+        update_json(app.config["COMPETITIONS_FILE"], {"competitions": []}, upsert)
+
+        return created({"competition": comp}, message="Competition created successfully")
+
+    @app.route("/api/admin/competitions/<slug>", methods=["PUT"])
+    @api_admin_required
+    def api_admin_competitions_update(slug):
+        """Update existing competition."""
+        from lib.responses import success, validation_error, not_found
+
+        if not request.is_json:
+            return validation_error({"_form": "JSON body required"})
+
+        comp = find_competition(slug)
+        if not comp:
+            return not_found("Competition")
+
+        data = request.get_json()
+        errors = validate_competition_data(data, existing_slug=slug)
+        if errors:
+            return validation_error(errors)
+
+        comp["title"] = data["title"].strip()
+        comp["category"] = data["category"].strip()
+        comp["short_description"] = data.get("short_description", "").strip()
+        comp["description"] = data.get("description", "").strip()
+        comp["date"] = data.get("date", "").strip()
+        comp["start_time"] = data.get("start_time", "").strip()
+        comp["end_time"] = data.get("end_time", "").strip()
+        comp["venue"] = data.get("venue", "").strip()
+        comp["eligibility"] = data.get("eligibility", "").strip()
+        comp["rules"] = data.get("rules", [])
+        comp["participation_type"] = data.get("participation_type", "individual")
+        comp["min_team_size"] = max(1, int(data.get("min_team_size", 1)))
+        comp["max_team_size"] = max(comp["min_team_size"], int(data.get("max_team_size", 1)))
+        comp["registration_status"] = data.get("registration_status", "open")
+        comp["registration_opens_at"] = data.get("registration_opens_at")
+        comp["registration_closes_at"] = data.get("registration_closes_at")
+        comp["capacity"] = data.get("capacity")
+        comp["prizes"] = data.get("prizes", {"first": "", "second": "", "third": "", "participation": ""})
+        comp["judging_criteria"] = data.get("judging_criteria", [])
+        comp["faq"] = data.get("faq", [])
+        comp["image"] = data.get("image", "").strip()
+        comp["is_published"] = data.get("is_published", True)
+        comp["updated_at"] = datetime.now().isoformat(timespec="seconds")
+
+        if comp["participation_type"] not in ("individual", "team", "both"):
+            comp["participation_type"] = "individual"
+
+        if comp["capacity"] is not None:
+            try:
+                comp["capacity"] = int(comp["capacity"])
+            except (TypeError, ValueError):
+                comp["capacity"] = None
+
+        def upsert(current):
+            comps_data = current if isinstance(current, dict) else {"competitions": []}
+            comps_list = comps_data.get("competitions", [])
+            if not isinstance(comps_list, list):
+                comps_list = []
+            comps_list = [c for c in comps_list if c.get("slug") != slug]
+            comps_list.append(comp)
+            return {"competitions": comps_list}
+
+        update_json(app.config["COMPETITIONS_FILE"], {"competitions": []}, upsert)
+
+        return success({"competition": comp}, message="Competition updated successfully")
+
+    @app.route("/api/admin/competitions/<slug>", methods=["DELETE"])
+    @api_admin_required
+    def api_admin_competitions_delete(slug):
+        """Delete competition."""
+        from lib.responses import success, not_found, conflict
+
+        comp = find_competition(slug)
+        if not comp:
+            return not_found("Competition")
+
+        registrations = load_registrations()
+        if any(r.get("event_slug") == slug for r in registrations):
+            return conflict("Cannot delete competition with existing registrations", code="HAS_REGISTRATIONS")
+
+        def remove(current):
+            comps_data = current if isinstance(current, dict) else {"competitions": []}
+            comps_list = comps_data.get("competitions", [])
+            if not isinstance(comps_list, list):
+                comps_list = []
+            comps_list = [c for c in comps_list if c.get("slug") != slug]
+            return {"competitions": comps_list}
+
+        update_json(app.config["COMPETITIONS_FILE"], {"competitions": []}, remove)
+
+        return success(message="Competition deleted successfully")
 
 
     # ---------------------------------------------------------------------------
