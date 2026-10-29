@@ -70,6 +70,8 @@ from lib.auth import (
     login_required,
     student_required,
     admin_required,
+    api_login_required,
+    api_admin_required,
     create_jwt,
     decode_jwt,
 )
@@ -1388,116 +1390,9 @@ def create_app(config_object=Config):
             storage_message=str(error),
         ), 500
 
-    return app
 
-
-# ---------------------------------------------------------------------------
-# Validation
-# ---------------------------------------------------------------------------
-
-def validate_registration(form, event):
-    """
-    Validate a submitted registration form.
-
-    Returns a dictionary of field name -> error message. An empty dictionary
-    means the submission is valid.
-    """
-    errors = {}
-
-    full_name = form.get("full_name", "")
-    email = form.get("email", "")
-    institution = form.get("institution", "")
-    phone = form.get("phone", "")
-    department = form.get("department", "")
-    academic_year = form.get("academic_year", "")
-    entry_type = form.get("entry_type", "")
-    team_name = form.get("team_name", "")
-    team_members = form.get("team_members", [])
-
-    if not full_name:
-        errors["full_name"] = "Enter the participant's full name."
-    elif len(full_name) < 3:
-        errors["full_name"] = "The full name must be at least 3 characters long."
-    elif len(full_name) > 100:
-        errors["full_name"] = "The full name must be 100 characters or fewer."
-
-    if not email:
-        errors["email"] = "Enter an email address so the organisers can reach you."
-    elif not EMAIL_RE.match(email):
-        errors["email"] = "Enter a valid email address, for example name@example.edu."
-
-    if institution and len(institution) > 120:
-        errors["institution"] = "The institution name must be 120 characters or fewer."
-
-    if phone and not PHONE_RE.match(phone):
-        errors["phone"] = "Enter a valid phone number, or leave the field empty."
-
-    if not department:
-        errors["department"] = "Select your department."
-    elif department not in DEPARTMENTS:
-        errors["department"] = "Select a department from the list."
-
-    if not academic_year:
-        errors["academic_year"] = "Select your year of study."
-    elif academic_year not in ACADEMIC_YEARS:
-        errors["academic_year"] = "Select a year of study from the list."
-
-    # --- Entry type and team rules -----------------------------------
-    participation = event["participation_type"]
-    min_size = event["min_team_size"]
-    max_size = event["max_team_size"]
-
-    if participation == "individual":
-        entry_type = "individual"
-    elif participation == "team":
-        entry_type = "team"
-        if not team_name:
-            errors["team_name"] = "Enter a name for your team."
-        if len(team_members) < min_size:
-            errors["team_members"] = (
-                "List at least {} team member name(s). You listed {}.".format(
-                    min_size, len(team_members)
-                )
-            )
-        if len(team_members) > max_size:
-            errors["team_members"] = (
-                "This event allows at most {} team member(s). You listed {}.".format(
-                    max_size, len(team_members)
-                )
-            )
-        if team_members and len(team_members) != len(
-            {m.lower() for m in team_members}
-        ):
-            errors["team_members"] = "Every team member must be listed only once."
-    else:  # "both"
-        if entry_type not in ("individual", "team"):
-            errors["entry_type"] = "Choose whether you are entering as a team or individually."
-        elif entry_type == "team":
-            if not team_name:
-                errors["team_name"] = "Enter a name for your team."
-            if len(team_members) < min_size:
-                errors["team_members"] = (
-                    "List at least {} team member name(s). You listed {}.".format(
-                        min_size, len(team_members)
-                    )
-                )
-            if len(team_members) > max_size:
-                errors["team_members"] = (
-                    "This event allows at most {} team member(s). You listed {}.".format(
-                        max_size, len(team_members)
-                    )
-                )
-            if team_members and len(team_members) != len(
-                {m.lower() for m in team_members}
-            ):
-                errors["team_members"] = "Every team member must be listed only once."
-
-    return errors
-
-
-# ---------------------------------------------------------------------------
-# API Routes (JSON endpoints for frontend integration)
-# ---------------------------------------------------------------------------
+    # API Routes (JSON endpoints for frontend integration)
+    # ---------------------------------------------------------------------------
 
     @app.route("/api/auth/login", methods=["POST"])
     def api_login():
@@ -1798,10 +1693,120 @@ def validate_registration(form, event):
         return success({"teams": teams})
 
 
+    # ---------------------------------------------------------------------------
+    # Entry point
+    # ---------------------------------------------------------------------------
+
+
+    return app
+
+
+
 # ---------------------------------------------------------------------------
-# Entry point
+# Validation
 # ---------------------------------------------------------------------------
 
+def validate_registration(form, event):
+    """
+    Validate a submitted registration form.
+
+    Returns a dictionary of field name -> error message. An empty dictionary
+    means the submission is valid.
+    """
+    errors = {}
+
+    full_name = form.get("full_name", "")
+    email = form.get("email", "")
+    institution = form.get("institution", "")
+    phone = form.get("phone", "")
+    department = form.get("department", "")
+    academic_year = form.get("academic_year", "")
+    entry_type = form.get("entry_type", "")
+    team_name = form.get("team_name", "")
+    team_members = form.get("team_members", [])
+
+    if not full_name:
+        errors["full_name"] = "Enter the participant's full name."
+    elif len(full_name) < 3:
+        errors["full_name"] = "The full name must be at least 3 characters long."
+    elif len(full_name) > 100:
+        errors["full_name"] = "The full name must be 100 characters or fewer."
+
+    if not email:
+        errors["email"] = "Enter an email address so the organisers can reach you."
+    elif not EMAIL_RE.match(email):
+        errors["email"] = "Enter a valid email address, for example name@example.edu."
+
+    if institution and len(institution) > 120:
+        errors["institution"] = "The institution name must be 120 characters or fewer."
+
+    if phone and not PHONE_RE.match(phone):
+        errors["phone"] = "Enter a valid phone number, or leave the field empty."
+
+    if not department:
+        errors["department"] = "Select your department."
+    elif department not in DEPARTMENTS:
+        errors["department"] = "Select a department from the list."
+
+    if not academic_year:
+        errors["academic_year"] = "Select your year of study."
+    elif academic_year not in ACADEMIC_YEARS:
+        errors["academic_year"] = "Select a year of study from the list."
+
+    # --- Entry type and team rules -----------------------------------
+    participation = event["participation_type"]
+    min_size = event["min_team_size"]
+    max_size = event["max_team_size"]
+
+    if participation == "individual":
+        entry_type = "individual"
+    elif participation == "team":
+        entry_type = "team"
+        if not team_name:
+            errors["team_name"] = "Enter a name for your team."
+        if len(team_members) < min_size:
+            errors["team_members"] = (
+                "List at least {} team member name(s). You listed {}.".format(
+                    min_size, len(team_members)
+                )
+            )
+        if len(team_members) > max_size:
+            errors["team_members"] = (
+                "This event allows at most {} team member(s). You listed {}.".format(
+                    max_size, len(team_members)
+                )
+            )
+        if team_members and len(team_members) != len(
+            {m.lower() for m in team_members}
+        ):
+            errors["team_members"] = "Every team member must be listed only once."
+    else:  # "both"
+        if entry_type not in ("individual", "team"):
+            errors["entry_type"] = "Choose whether you are entering as a team or individually."
+        elif entry_type == "team":
+            if not team_name:
+                errors["team_name"] = "Enter a name for your team."
+            if len(team_members) < min_size:
+                errors["team_members"] = (
+                    "List at least {} team member name(s). You listed {}.".format(
+                        min_size, len(team_members)
+                    )
+                )
+            if len(team_members) > max_size:
+                errors["team_members"] = (
+                    "This event allows at most {} team member(s). You listed {}.".format(
+                        max_size, len(team_members)
+                    )
+                )
+            if team_members and len(team_members) != len(
+                {m.lower() for m in team_members}
+            ):
+                errors["team_members"] = "Every team member must be listed only once."
+
+    return errors
+
+
+# ---------------------------------------------------------------------------
 app = create_app(Config)
 
 
